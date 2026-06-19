@@ -50,6 +50,11 @@ REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 PLUGIN_PATH="$REPO_ROOT/plugins/mission-control"
 
 if [[ "$BUILD" == "true" ]]; then
+  if ! command -v pwsh >/dev/null 2>&1; then
+    echo "The 'pwsh' command is required for --build but was not found on PATH." >&2
+    exit 1
+  fi
+
   pwsh -File "$REPO_ROOT/adapters/copilot/build.ps1"
 fi
 

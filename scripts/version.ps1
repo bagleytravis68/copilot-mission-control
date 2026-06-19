@@ -12,9 +12,9 @@ $ErrorActionPreference = "Stop"
 
 $repoRoot = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
 $versionFile = Join-Path $repoRoot "VERSION"
-$teamPath = Join-Path $repoRoot "team\team.json"
-$pluginPath = Join-Path $repoRoot "plugins\mission-control\plugin.json"
-$marketplacePath = Join-Path $repoRoot ".github\plugin\marketplace.json"
+$teamPath = [System.IO.Path]::Combine($repoRoot, "team", "team.json")
+$pluginPath = [System.IO.Path]::Combine($repoRoot, "plugins", "mission-control", "plugin.json")
+$marketplacePath = [System.IO.Path]::Combine($repoRoot, ".github", "plugin", "marketplace.json")
 
 function Get-CanonicalVersion {
     return (Get-Content -LiteralPath $versionFile -Raw).Trim()

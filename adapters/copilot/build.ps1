@@ -4,7 +4,7 @@ param(
 
 $ErrorActionPreference = "Stop"
 
-$repoRoot = (Resolve-Path (Join-Path $PSScriptRoot "..\\..")).Path
+$repoRoot = (Resolve-Path (Join-Path $PSScriptRoot "../..")).Path
 $mappingPath = Join-Path $PSScriptRoot "mapping.json"
 $mapping = Get-Content -LiteralPath $mappingPath -Raw | ConvertFrom-Json
 $targetDir = Join-Path $repoRoot $mapping.plugin.agentsDirectory
