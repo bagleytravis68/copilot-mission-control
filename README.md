@@ -94,7 +94,15 @@ PR policy:
 2. If a changelog entry is not needed, apply the `no-changelog` label to skip the CI changelog requirement.
 3. Only maintainers should bump `VERSION` and the mirrored package versions.
 4. Only maintainer-owned milestone or release PRs should move items from `Unreleased` into a versioned changelog section.
-5. The combined GitHub Actions policy workflow should stay green.
+5. PR source branches must use an intent-first kebab-case name with one allowed prefix: `feat/`, `fix/`, `docs/`, `chore/`, `refactor/`, or `test/`. Optional issue-number forms such as `feat/123-add-rubber-duck-agent` are supported, and long-form prefixes such as `feature/` are rejected.
+6. The combined GitHub Actions policy workflow should stay green.
+
+Worktree branch naming:
+
+1. App-created username-prefixed worktree branch names are temporary bootstrap names, not review-ready branch names.
+2. Rename the branch once, immediately after session creation and before substantive work, by using the app's branch rename capability.
+3. If there is already an issue for the work, prefer using that existing issue as the documentation anchor and include its number in the branch name when practical. Work without an issue is still acceptable when none exists.
+4. Keep the branch name intent-first and kebab-case after the prefix, for example `fix/repair-version-check` or `docs/123-clarify-plugin-install`.
 
 When to bump:
 

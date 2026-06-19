@@ -17,7 +17,7 @@ on:
 
 jobs:
   policy-checks:
-    name: Version and changelog policy
+    name: Version, changelog, and branch policy
     runs-on: ubuntu-latest
 
     steps:
@@ -29,6 +29,23 @@ jobs:
       - name: Run version consistency check
         shell: pwsh
         run: .\scripts\version.ps1 -Command check
+
+      - name: Verify pull request branch name
+        if: ${{ github.event_name == 'pull_request' }}
+        shell: bash
+        run: |
+          BRANCH_NAME="${{ github.head_ref }}"
+          ALLOWED_PATTERN='^(feat|fix|docs|chore|refactor|test)/([0-9]+-)?[a-z0-9]+(-[a-z0-9]+)*$'
+
+          if [[ "$BRANCH_NAME" =~ ^feature/ ]]; then
+            echo "::error::PR source branch '$BRANCH_NAME' uses the forbidden 'feature/' prefix. Use one of feat/, fix/, docs/, chore/, refactor/, or test/."
+            exit 1
+          fi
+
+          if [[ ! "$BRANCH_NAME" =~ $ALLOWED_PATTERN ]]; then
+            echo "::error::PR source branch '$BRANCH_NAME' must use intent-first kebab-case with one of feat/, fix/, docs/, chore/, refactor/, or test/. Optional issue-number forms such as feat/123-add-rubber-duck-agent are allowed."
+            exit 1
+          fi
 
       - name: Verify CHANGELOG.md changed in this PR
         if: ${{ github.event_name == 'pull_request' && !contains(github.event.pull_request.labels.*.name, 'no-changelog') }}
