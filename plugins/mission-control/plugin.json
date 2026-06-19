@@ -1,0 +1,21 @@
+{
+  "name": "mission-control-agent-team",
+  "description": "Specialized multi-agent software delivery team for GitHub Copilot CLI.",
+  "version": "0.1.0",
+  "author": {
+    "name": "Travis Bagley"
+  },
+  "homepage": "https://github.com/bagleytravis68/copilot-mission-control",
+  "repository": "https://github.com/bagleytravis68/copilot-mission-control",
+  "keywords": [
+    "copilot",
+    "agents",
+    "skills",
+    "workflow",
+    "orchestration",
+    "plugin"
+  ],
+  "category": "developer-tools",
+  "agents": "agents/",
+  "skills": "skills/"
+}

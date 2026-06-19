@@ -1,0 +1,64 @@
+{
+  "plugin": {
+    "name": "mission-control-agent-team",
+    "directory": "plugins/mission-control",
+    "agentsDirectory": "plugins/mission-control/agents",
+    "skillsDirectory": "plugins/mission-control/skills"
+  },
+  "marketplace": {
+    "name": "mission-control-marketplace",
+    "manifest": ".github/plugin/marketplace.json"
+  },
+  "agents": [
+    {
+      "id": "ava",
+      "source": "agents/ava/agent.md",
+      "targetFile": "ava-architect.agent.md"
+    },
+    {
+      "id": "carl",
+      "source": "agents/carl/agent.md",
+      "targetFile": "carl-coder.agent.md"
+    },
+    {
+      "id": "libby",
+      "source": "agents/libby/agent.md",
+      "targetFile": "libby-librarian.agent.md"
+    },
+    {
+      "id": "maestro",
+      "source": "agents/maestro/agent.md",
+      "targetFile": "maestro-orchestrator.agent.md"
+    },
+    {
+      "id": "pax",
+      "source": "agents/pax/agent.md",
+      "targetFile": "pax-planner.agent.md"
+    },
+    {
+      "id": "riley",
+      "source": "agents/riley/agent.md",
+      "targetFile": "riley-relay.agent.md"
+    },
+    {
+      "id": "sam",
+      "source": "agents/sam/agent.md",
+      "targetFile": "sam-scribe.agent.md"
+    },
+    {
+      "id": "scout",
+      "source": "agents/scout/agent.md",
+      "targetFile": "scout-explorer.agent.md"
+    },
+    {
+      "id": "sera",
+      "source": "agents/sera/agent.md",
+      "targetFile": "sera-security.agent.md"
+    },
+    {
+      "id": "tess",
+      "source": "agents/tess/agent.md",
+      "targetFile": "tess-tester.agent.md"
+    }
+  ]
+}

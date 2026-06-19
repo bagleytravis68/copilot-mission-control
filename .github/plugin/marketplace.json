@@ -1,0 +1,18 @@
+{
+  "name": "mission-control-marketplace",
+  "owner": {
+    "name": "Travis Bagley"
+  },
+  "metadata": {
+    "description": "Marketplace manifest for installing the Mission Control agent team as a GitHub Copilot CLI plugin.",
+    "version": "0.1.0"
+  },
+  "plugins": [
+    {
+      "name": "mission-control-agent-team",
+      "description": "Specialized multi-agent software delivery team for GitHub Copilot CLI.",
+      "version": "0.1.0",
+      "source": "plugins/mission-control"
+    }
+  ]
+}
