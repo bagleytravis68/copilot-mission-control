@@ -21,3 +21,6 @@ Contribution policy:
 - Copilot marketplace manifest under `.github/plugin/marketplace.json`
 - Installer scripts and Copilot adapter build scaffolding
 - Harness-specific maintainer instructions for agents, skills, and hooks
+
+### Changed
+- Added repo-wide branch naming governance for app-created worktree sessions and PR policy checks, including rejection of `feature/` branch prefixes and a preference for existing issue-backed branch naming when available.
