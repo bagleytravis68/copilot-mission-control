@@ -34,7 +34,8 @@ jobs:
         if: ${{ github.event_name == 'pull_request' }}
         shell: bash
         run: |
-          BRANCH_NAME="${{ github.head_ref }}"
+          set -euo pipefail
+          BRANCH_NAME="${GITHUB_HEAD_REF:?}"
           ALLOWED_PATTERN='^(feat|fix|docs|chore|refactor|test)/([0-9]+-)?[a-z0-9]+(-[a-z0-9]+)*$'
 
           if [[ "$BRANCH_NAME" =~ ^feature/ ]]; then
