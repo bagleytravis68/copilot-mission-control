@@ -17,5 +17,6 @@
   ],
   "category": "developer-tools",
   "agents": "agents/",
-  "skills": "skills/"
+  "skills": "skills/",
+  "hooks": "hooks.json"
 }

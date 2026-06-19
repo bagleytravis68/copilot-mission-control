@@ -1,0 +1,133 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/bagleytravis68/copilot-mission-control/schemas/communication.schema.json",
+  "title": "Mission Control communication wrapper",
+  "type": "object",
+  "required": [
+    "handoffRequest",
+    "handoffResponse"
+  ],
+  "properties": {
+    "handoffRequest": {
+      "$ref": "#/$defs/handoffRequest"
+    },
+    "handoffResponse": {
+      "$ref": "#/$defs/handoffResponse"
+    }
+  },
+  "$defs": {
+    "handoffRequest": {
+      "type": "object",
+      "required": [
+        "handoff_id",
+        "to",
+        "goal",
+        "scope",
+        "constraints",
+        "success",
+        "deliverable"
+      ],
+      "properties": {
+        "handoff_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "to": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "goal": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 500
+        },
+        "scope": {
+          "$ref": "#/$defs/shortStringList"
+        },
+        "constraints": {
+          "$ref": "#/$defs/shortStringList"
+        },
+        "success": {
+          "$ref": "#/$defs/shortStringList"
+        },
+        "deliverable": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 500
+        },
+        "custom": {
+          "type": "object"
+        }
+      },
+      "additionalProperties": false
+    },
+    "handoffResponse": {
+      "type": "object",
+      "required": [
+        "handoff_id",
+        "status",
+        "summary",
+        "evidence",
+        "artifacts",
+        "gaps",
+        "next"
+      ],
+      "properties": {
+        "handoff_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "status": {
+          "enum": [
+            "SUCCESS",
+            "PARTIAL",
+            "FAILED",
+            "BLOCKED"
+          ]
+        },
+        "summary": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 700
+        },
+        "evidence": {
+          "$ref": "#/$defs/shortStringList"
+        },
+        "artifacts": {
+          "$ref": "#/$defs/shortStringList"
+        },
+        "gaps": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 700
+        },
+        "next": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 300
+        },
+        "custom": {
+          "type": "object"
+        }
+      },
+      "additionalProperties": false
+    },
+    "shortStringList": {
+      "type": "array",
+      "maxItems": 12,
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 300
+      }
+    }
+  },
+  "additionalProperties": false
+}

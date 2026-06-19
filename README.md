@@ -20,6 +20,9 @@ This repository currently contains:
 
 - the canonical Mission Control agent source under `agents/`
 - the canonical Mission Control skill source under `skills/`
+- canonical session trace hook assets under `hooks/session-trace/`
+- a shared communication wrapper schema at `team/communication.schema.json`
+- a best-effort GitHub Copilot app extension under `.github/extensions/mission-control/`
 - a team manifest under `team/`
 - a canonical version file at `VERSION`
 - an unreleased change tracker in `CHANGELOG.md`
@@ -40,17 +43,27 @@ The source of truth for the team lives in:
 
 Each agent has its own folder so the team is readable and maintainable without forcing consumers to work directly inside a hidden runtime-specific folder.
 
-### 2. Runtime adapter
+### 2. Runtime adapters
 
-The first runtime adapter is **GitHub Copilot CLI**.
+The first runtime adapter is **GitHub Copilot CLI**. The repository also includes a best-effort **GitHub Copilot app** compatibility extension because the app harness uses its SDK extension surface rather than installed Copilot CLI plugin hooks.
 
 The Copilot adapter owns:
 
 - file-name mapping from source agents into plugin agent files
 - skill-directory sync from canonical source into plugin skill folders
+- session trace hook sync into the plugin hook package
+- communication guard hook sync into the plugin hook package
 - the plugin package layout
 - the build script that syncs source agents into the plugin bundle
 - the marketplace manifest used for discovery and installation
+
+The Copilot app extension owns only app-supported compatibility behavior:
+
+- project extension discovery through `.github/extensions/mission-control/extension.mjs`
+- SDK hook callbacks for session, prompt, tool, and error events
+- best-effort `.tmp/sessions/<sessionId>/app-session.json` metadata
+
+The app SDK hook surface is not identical to Copilot CLI plugin hooks. In particular, the local SDK supports `onPreToolUse`, `onPreMcpToolCall`, `onPostToolUse`, `onPostToolUseFailure`, `onUserPromptSubmitted`, `onSessionStart`, `onSessionEnd`, and `onErrorOccurred`; it does not expose the same `subagentStart`/`subagentStop` hooks used by Copilot CLI hook configuration.
 
 ### 3. Install surfaces
 
@@ -189,7 +202,8 @@ This repository is structured to work with the **GitHub Copilot CLI plugin syste
 ### Install from the local plugin bundle
 
 ```powershell
-copilot plugin install .\plugins\mission-control
+$pluginPath = (Resolve-Path .\plugins\mission-control).Path
+copilot plugin install $pluginPath
 ```
 
 ### Install from the repository subdirectory
@@ -226,6 +240,70 @@ Marketplace install:
 .\install\install.ps1 -Source marketplace -MarketplaceSpec bagleytravis68/copilot-mission-control -MarketplaceName mission-control-marketplace
 ```
 
+## Session traceability
+
+Mission Control includes a lightweight Copilot hook package that writes readable runtime metadata under:
+
+```text
+.tmp/sessions/<sessionId>/session.json
+```
+
+The trace is intentionally minimal. It records the Copilot `sessionId`, repository root path, session start and end times, sub-agent names, sub-agent start and completion times, statuses, and reserved handoff ID fields for correlation. It does **not** record prompt text, tool results, command output, secrets, or full handoff payload contents.
+
+The trace format is defined in `hooks/session-trace/session-trace.schema.json`. Runtime output under `.tmp/` is ignored by git, except for `.tmp/sessions/.gitkeep` so the expected directory exists in fresh checkouts.
+
+The GitHub Copilot app extension writes a separate best-effort app trace under:
+
+```text
+.tmp/sessions/<sessionId>/app-session.json
+```
+
+This app trace uses only events exposed by the local app SDK extension surface. It may observe tool calls and session events, but it should not be treated as equivalent to Copilot CLI plugin `subagentStart`/`subagentStop` telemetry. It honors both the all-hooks bypass and the trace-only bypass.
+
+In this harness, the project extension was verified to load and capture app `postToolUse` events such as `extensions_reload`, `extensions_manage`, `powershell`, and `rg`. Treat other registered SDK hooks as best-effort until each event is observed in the target app/runtime version.
+
+## Communication wrapper
+
+Mission Control agents use a compact JSON request/response wrapper for sub-agent handoffs. The schema lives at:
+
+```text
+team/communication.schema.json
+```
+
+The request wrapper uses `handoff_id`, `to`, `goal`, `scope`, `constraints`, `success`, `deliverable`, and optional `custom`. The response wrapper uses `handoff_id`, `status`, `summary`, `evidence`, `artifacts`, `gaps`, `next`, and optional `custom`.
+
+The Copilot plugin includes guard hooks that preserve native Copilot subagent execution while adding deterministic checks where Copilot exposes lifecycle events. The guard injects the response requirement into Mission Control subagent prompts, validates observable native `agent`/`task` tool handoff payloads when they target Mission Control agents or include `handoff_id`, and can block malformed Mission Control subagent responses for correction. It does not shell out to nested Copilot CLI sessions.
+
+## Safety toggles
+
+For live testing, the safest switch is to bypass Mission Control hooks while leaving the plugin installed:
+
+```powershell
+.\scripts\mission-control-toggle.ps1 -Command disable-hooks
+.\scripts\mission-control-toggle.ps1 -Command enable-hooks
+```
+
+You can also bypass only communication enforcement or trace writing in the current repository:
+
+```powershell
+.\scripts\mission-control-toggle.ps1 -Command disable-guard
+.\scripts\mission-control-toggle.ps1 -Command enable-guard
+.\scripts\mission-control-toggle.ps1 -Command disable-trace
+.\scripts\mission-control-toggle.ps1 -Command enable-trace
+.\scripts\mission-control-toggle.ps1 -Command status
+```
+
+The hook bypasses are marker files under `.tmp/`, so they are local runtime state and are not committed. Shell-scoped environment variables are also supported: `MISSION_CONTROL_DISABLED=1`, `MISSION_CONTROL_GUARD_DISABLED=1`, and `MISSION_CONTROL_TRACE_DISABLED=1`. The Copilot app extension honors `disable-hooks` / `MISSION_CONTROL_DISABLED=1` and `disable-trace` / `MISSION_CONTROL_TRACE_DISABLED=1`; `disable-guard` is specific to the Copilot CLI communication guard.
+
+To remove or restore the whole plugin in this repository, use:
+
+```powershell
+.\scripts\mission-control-toggle.ps1 -Command disable-plugin
+.\scripts\mission-control-toggle.ps1 -Command enable-plugin
+```
+
+Current GitHub docs list `copilot plugin disable` and `copilot plugin enable`, but the CLI version used to test this repository exposes install, list, update, uninstall, and marketplace commands. The helper therefore uses uninstall/reinstall for whole-plugin toggling and marker files for fast hook-level bypasses.
+
 ## Working with the source
 
 When updating the team:
@@ -233,13 +311,16 @@ When updating the team:
 1. Edit the canonical agent source in `agents/`.
 2. Edit the canonical skill source in `skills/` when adding or updating skills.
 3. Update metadata in `team/team.json` if the roster or packaging metadata changes.
-4. Run the Copilot adapter build script:
+4. Update `team/communication.schema.json` when changing the communication wrapper.
+5. Update `hooks/session-trace/` when changing Copilot CLI session trace or communication guard behavior.
+6. Update `.github/extensions/mission-control/` when changing GitHub Copilot app compatibility behavior.
+7. Run the Copilot adapter build script:
 
 ```powershell
 .\adapters\copilot\build.ps1
 ```
 
-That script syncs the source agents and source skills into `plugins/mission-control/`.
+That script syncs the source agents, source skills, session trace hook assets, and communication guard assets into `plugins/mission-control/`.
 
 ## Repository layout
 
@@ -258,11 +339,20 @@ That script syncs the source agents and source skills into `plugins/mission-cont
 │  └─ tess/
 ├─ skills/
 │  └─ README.md
+├─ hooks/
+│  └─ session-trace/
+│     ├─ copilot-hooks.json
+│     ├─ session-trace.ps1
+│     ├─ session-trace.schema.json
+│     └─ session-trace.sh
 ├─ team/
+│  ├─ communication.schema.json
 │  └─ team.json
 ├─ CHANGELOG.md
 ├─ VERSION
 ├─ scripts/
+│  ├─ mission-control-toggle.ps1
+│  ├─ mission-control-toggle.sh
 │  └─ version.ps1
 ├─ adapters/
 │  ├─ copilot/
@@ -278,8 +368,13 @@ That script syncs the source agents and source skills into `plugins/mission-cont
 │  └─ mission-control/
 │     ├─ plugin.json
 │     ├─ agents/
+│     ├─ hooks/
+│     ├─ hooks.json
 │     └─ skills/
 ├─ .github/
+│  ├─ extensions/
+│  │  └─ mission-control/
+│  │     └─ extension.mjs
 │  └─ plugin/
 │     └─ marketplace.json
 ├─ install/
@@ -303,6 +398,8 @@ Those folders are placeholders only. They should not be implemented by guesswork
 What is implemented now:
 
 - generic agent-team source folders
+- session trace hook source
+- GitHub Copilot app compatibility extension
 - a team manifest
 - a Copilot CLI plugin package
 - a Copilot marketplace manifest
@@ -313,6 +410,6 @@ What is intentionally left for later:
 
 - Claude Code adapter implementation
 - Codex adapter implementation
-- additional skills, hooks, MCP servers, or runtime-specific extensions beyond the initial Copilot plugin packaging
+- additional skills, MCP servers, or runtime-specific extensions beyond the initial Copilot plugin packaging and session trace hooks
 
 This keeps the initial setup correct for Copilot without locking the repository into a Copilot-only shape.
