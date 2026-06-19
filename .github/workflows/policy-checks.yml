@@ -1,0 +1,44 @@
+name: Policy Checks
+
+on:
+  pull_request:
+    types:
+      - opened
+      - synchronize
+      - reopened
+      - labeled
+      - unlabeled
+      - ready_for_review
+  push:
+    branches:
+      - main
+      - master
+      - bagleytravis68-import-custom-agents
+
+jobs:
+  policy-checks:
+    name: Version and changelog policy
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Run version consistency check
+        shell: pwsh
+        run: .\scripts\version.ps1 -Command check
+
+      - name: Verify CHANGELOG.md changed in this PR
+        if: ${{ github.event_name == 'pull_request' && !contains(github.event.pull_request.labels.*.name, 'no-changelog') }}
+        shell: bash
+        run: |
+          git fetch origin "${{ github.base_ref }}" --depth=1
+          CHANGED_FILES="$(git diff --name-only "origin/${{ github.base_ref }}"...HEAD)"
+          echo "$CHANGED_FILES"
+
+          if ! grep -Fxq "CHANGELOG.md" <<< "$CHANGED_FILES"; then
+            echo "::error::CHANGELOG.md must be updated under the Unreleased section in this PR unless the PR is labeled 'no-changelog'."
+            exit 1
+          fi

@@ -1,0 +1,107 @@
+{
+  "schemaVersion": 1,
+  "team": {
+    "id": "mission-control-agent-team",
+    "name": "Mission Control Agent Team",
+    "description": "Specialized multi-agent software delivery team with a Copilot CLI plugin adapter and room for future runtime adapters.",
+    "version": "0.1.0",
+    "stage": "alpha",
+    "releaseStatus": "unreleased",
+    "primaryRuntime": "copilot-cli-plugin"
+  },
+  "agents": [
+    {
+      "id": "maestro",
+      "name": "Maestro (Orchestrator)",
+      "role": "Orchestrator",
+      "description": "High-level orchestrator and quality gatekeeper.",
+      "source": "agents/maestro/agent.md",
+      "copilotFile": "maestro-orchestrator.agent.md"
+    },
+    {
+      "id": "pax",
+      "name": "Pax (Planner)",
+      "role": "Planner",
+      "description": "Planning specialist and requirement engineer. Produces decision-complete implementation plans.",
+      "source": "agents/pax/agent.md",
+      "copilotFile": "pax-planner.agent.md"
+    },
+    {
+      "id": "scout",
+      "name": "Scout (Explorer)",
+      "role": "Explorer",
+      "description": "Fast code discovery and exploration agent. Identifies relevant files, extracts context, maps codebase patterns, and summarizes logs.",
+      "source": "agents/scout/agent.md",
+      "copilotFile": "scout-explorer.agent.md"
+    },
+    {
+      "id": "ava",
+      "name": "Ava (Architect)",
+      "role": "Architect",
+      "description": "Critical thinker for high-level architecture decisions. Never guesses, assumes, or approximates.",
+      "source": "agents/ava/agent.md",
+      "copilotFile": "ava-architect.agent.md"
+    },
+    {
+      "id": "carl",
+      "name": "Carl (Coder)",
+      "role": "Coder",
+      "description": "Use this agent when the user asks to implement code changes, features, refactors, or bug fixes with strict scope discipline and atomic task tracking.",
+      "source": "agents/carl/agent.md",
+      "copilotFile": "carl-coder.agent.md"
+    },
+    {
+      "id": "tess",
+      "name": "Tess (Tester)",
+      "role": "Tester",
+      "description": "Use this agent when the user asks to create tests, test strategy, edge case analysis, or test coverage improvements for unit, integration, or end-to-end testing.",
+      "source": "agents/tess/agent.md",
+      "copilotFile": "tess-tester.agent.md"
+    },
+    {
+      "id": "sera",
+      "name": "Sera (Security)",
+      "role": "Security",
+      "description": "Use this agent when the user asks for security assessment, vulnerability detection, hardening recommendations, or secret scanning of code changes.",
+      "source": "agents/sera/agent.md",
+      "copilotFile": "sera-security.agent.md"
+    },
+    {
+      "id": "riley",
+      "name": "Riley (Relay)",
+      "role": "Relay",
+      "description": "Use this agent when the user asks to create or modify CI/CD pipelines, build scripts, deployment configurations, or automation workflows.",
+      "source": "agents/riley/agent.md",
+      "copilotFile": "riley-relay.agent.md"
+    },
+    {
+      "id": "sam",
+      "name": "Sam (Scribe)",
+      "role": "Scribe",
+      "description": "Use this agent when the user asks to write or update documentation, including READMEs, PR descriptions, guides, API docs, diagrams, and other technical content.",
+      "source": "agents/sam/agent.md",
+      "copilotFile": "sam-scribe.agent.md"
+    },
+    {
+      "id": "libby",
+      "name": "Libby (Librarian)",
+      "role": "Librarian",
+      "description": "External research specialist. Scans the web, reads documentation, discovers best practices, and answers questions about external sources.",
+      "source": "agents/libby/agent.md",
+      "copilotFile": "libby-librarian.agent.md"
+    }
+  ],
+  "adapters": {
+    "copilot": {
+      "mapping": "adapters/copilot/mapping.json",
+      "pluginPath": "plugins/mission-control",
+      "marketplaceManifest": ".github/plugin/marketplace.json"
+    },
+    "claude-code": {
+      "status": "reserved-for-future-implementation"
+    },
+    "codex": {
+      "status": "reserved-for-future-implementation"
+    }
+  }
+}

@@ -1,0 +1,179 @@
+# agents.md
+
+This repository is a **portable agent-team package** with runtime adapters. If you are an AI agent updating this repo, do **not** assume one harness works like another. Read the official packaging and installation documentation for the harness and component type you are touching before you edit adapter, plugin, marketplace, installer, skill, or hook files.
+
+## Required workflow for AI agents
+
+1. Identify whether your change affects the **core source** or a **runtime adapter**.
+2. If the change touches a runtime adapter, read that harness's official documentation for the relevant component type first.
+3. Make changes in the **canonical source** first when possible.
+4. Rebuild or resync the runtime package from source instead of hand-maintaining duplicate copies.
+5. Update the docs that describe packaging and installation whenever the install path changes.
+6. Verify the runtime packaging shape after any adapter change.
+
+## Source-of-truth locations
+
+- `agents/` is the canonical custom-agent source.
+- `skills/` is the canonical skill source.
+- `team/team.json` is the canonical team and packaging metadata.
+- `plugins/mission-control/` is the installable Copilot plugin package.
+- `adapters/copilot/build.ps1` syncs canonical source into the Copilot plugin package.
+
+Do not treat generated runtime packaging as the primary authoring surface unless the change is explicitly runtime-only.
+
+## Harness instruction index
+
+Use this table before changing any harness-specific files.
+
+| Harness | Add custom agent | Add skill | Add hook | Notes |
+| --- | --- | --- | --- | --- |
+| Copilot | `adapters/copilot/INSTRUCTIONS.md` | `adapters/copilot/INSTRUCTIONS.md` | `adapters/copilot/INSTRUCTIONS.md` | Implemented now; use official GitHub docs first |
+| Claude Code | `adapters/claude-code/INSTRUCTIONS.md` | `adapters/claude-code/INSTRUCTIONS.md` | `adapters/claude-code/INSTRUCTIONS.md` | Placeholder only; do not implement by analogy |
+| Codex | `adapters/codex/INSTRUCTIONS.md` | `adapters/codex/INSTRUCTIONS.md` | `adapters/codex/INSTRUCTIONS.md` | Placeholder only; do not implement by analogy |
+
+## Copilot-specific documentation
+
+If you touch any of the following:
+
+- `adapters/copilot/`
+- `plugins/mission-control/`
+- `.github/plugin/marketplace.json`
+- `install/install.ps1`
+- `install/install.sh`
+- `agents/`
+- `skills/`
+
+read the official GitHub Copilot documentation for the specific change first:
+
+### Copilot plugin packaging
+
+- Plugin creation: https://docs.github.com/en/copilot/how-tos/copilot-cli/customize-copilot/plugins-creating
+- Plugin marketplace: https://docs.github.com/en/copilot/how-tos/copilot-cli/customize-copilot/plugins-marketplace
+- Plugin installation: https://docs.github.com/en/copilot/how-tos/copilot-cli/customize-copilot/plugins-finding-installing
+- Plugin reference: https://docs.github.com/en/copilot/reference/copilot-cli-reference/cli-plugin-reference
+
+### Copilot skills
+
+- Skills: https://docs.github.com/en/copilot/how-tos/copilot-cli/customize-copilot/add-skills
+
+### Copilot hooks
+
+- Hooks usage: https://docs.github.com/en/copilot/how-tos/copilot-cli/customize-copilot/use-hooks
+- Hooks reference: https://docs.github.com/en/copilot/reference/hooks-reference
+
+Do not infer Copilot plugin behavior from repo-local custom-agent behavior alone.
+
+## Instruction sections by goal
+
+### Goal: add a custom agent
+
+1. Read the Copilot plugin creation and plugin reference docs first.
+2. Author the canonical agent under `agents/<agent-id>/agent.md`.
+3. If the agent is new, update:
+   - `team/team.json`
+   - `adapters/copilot/mapping.json`
+4. Run:
+
+```powershell
+.\adapters\copilot\build.ps1
+```
+
+5. Confirm the generated plugin file exists in `plugins/mission-control/agents/`.
+6. Reinstall or update the plugin before claiming the runtime package is correct.
+
+### Goal: add a skill
+
+1. Read the Copilot skills doc and the plugin docs first.
+2. Author the canonical skill under `skills/<skill-name>/SKILL.md`.
+3. Keep the skill directory name lowercase and hyphenated.
+4. Ensure `SKILL.md` has the required `name` and `description` YAML frontmatter.
+5. If the skill needs scripts or resources, keep them inside the same skill directory.
+6. If `allowed-tools` is used, be conservative and do not pre-approve shell access casually.
+7. Run:
+
+```powershell
+.\adapters\copilot\build.ps1
+```
+
+8. Confirm the generated skill exists under `plugins/mission-control/skills/<skill-name>/`.
+9. Reinstall the plugin and verify the skill with Copilot CLI commands such as `/skills list` or `/skills info <skill-name>`.
+
+### Goal: add a hook
+
+1. Read the Copilot hooks usage and hooks reference docs first.
+2. Decide whether the hook is:
+   - plugin-packaged behavior, or
+   - repository-only behavior
+3. If it should ship with the plugin, add it to the plugin package shape defined by the Copilot docs and adapter instructions.
+4. Prefer cross-platform hook commands when practical by providing both `bash` and `powershell` entries.
+5. Keep hook JSON valid and versioned correctly.
+6. Verify hook behavior with the documented Copilot hook loading model instead of assuming plugin and repo hooks behave the same way.
+
+### Goal: update the repository version
+
+1. Do not hand-edit all mirrored version targets individually.
+2. Treat `VERSION` as the canonical source of truth.
+3. Use:
+
+```powershell
+.\scripts\version.ps1 -Command show
+.\scripts\version.ps1 -Command check
+.\scripts\version.ps1 -Command bump-patch
+.\scripts\version.ps1 -Command bump-minor
+.\scripts\version.ps1 -Command set -Version 0.2.0
+```
+
+4. After changing the version, confirm the script has synced:
+   - `team/team.json`
+   - `plugins/mission-control/plugin.json`
+   - `.github/plugin/marketplace.json`
+5. Keep `CHANGELOG.md` updated under `Unreleased` until a tested release is intentionally cut.
+6. Do not bypass the CI version check; `.github/workflows/policy-checks.yml` should stay green.
+7. Ordinary contributor PRs should not bump `VERSION`; version bumps are maintainer-owned.
+
+### Goal: open or update a pull request
+
+1. Update `CHANGELOG.md` under `Unreleased` for noteworthy changes.
+2. If the PR truly should not touch the changelog, apply the `no-changelog` label.
+3. Keep `.github/workflows/policy-checks.yml` green.
+4. Do not include a version bump in ordinary contributor PRs unless a maintainer is intentionally cutting a milestone.
+
+### Goal: review or merge a pull request
+
+If AI is reviewing or merging a PR, check these rules explicitly:
+
+1. If the PR is a normal contributor PR:
+   - `CHANGELOG.md` should be updated only under `Unreleased`, or
+   - the PR should carry `no-changelog`
+   - `VERSION` should not be bumped
+2. If the PR is a maintainer-owned milestone or release PR:
+   - it may move entries from `Unreleased` into a versioned section
+   - it may bump `VERSION` using `.\scripts\version.ps1`
+   - it should keep the new release section concise and limited to milestone-worthy changes
+3. Before merge, confirm:
+   - `.github/workflows/policy-checks.yml` is green
+   - the changelog entry quality is appropriate for the type of PR
+   - the PR did not quietly mix ordinary contributor work with release-management changes unless that was intentional and reviewed
+
+## Future harness adapters
+
+Folders for future adapters already exist:
+
+- `adapters/claude-code/`
+- `adapters/codex/`
+
+Before implementing either one:
+
+1. Find the official plugin or extension documentation for that harness.
+2. Add or update adapter-local instructions that link to those official docs.
+3. Design the adapter around the real packaging model for that harness instead of copying the Copilot adapter blindly.
+4. Update this file's harness instruction index if new component goals or workflows are added.
+
+## Guardrails
+
+- Do not reintroduce a hidden-folder-only repo structure as the primary product model.
+- Do not add backup files to installable packages.
+- Do not invent marketplace, plugin, skill, or hook schemas.
+- Do not update installer commands without checking the current official docs.
+- Do not hand-edit the Copilot plugin agent or skill copies without also syncing the canonical source.
+- Do not add runtime-specific components to placeholder adapters until their official docs have been reviewed and linked.

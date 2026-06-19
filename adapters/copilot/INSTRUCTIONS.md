@@ -1,0 +1,154 @@
+# Copilot component instructions
+
+Use this document when changing the **GitHub Copilot CLI** adapter or plugin package in this repository.
+
+## Read these first
+
+### Plugin packaging
+
+- Plugin creation: https://docs.github.com/en/copilot/how-tos/copilot-cli/customize-copilot/plugins-creating
+- Plugin marketplace: https://docs.github.com/en/copilot/how-tos/copilot-cli/customize-copilot/plugins-marketplace
+- Plugin installation: https://docs.github.com/en/copilot/how-tos/copilot-cli/customize-copilot/plugins-finding-installing
+- Plugin reference: https://docs.github.com/en/copilot/reference/copilot-cli-reference/cli-plugin-reference
+
+### Skills
+
+- Skills: https://docs.github.com/en/copilot/how-tos/copilot-cli/customize-copilot/add-skills
+
+### Hooks
+
+- Hooks usage: https://docs.github.com/en/copilot/how-tos/copilot-cli/customize-copilot/use-hooks
+- Hooks reference: https://docs.github.com/en/copilot/reference/hooks-reference
+
+## Current repository conventions
+
+- Canonical custom-agent source: `agents/<agent-id>/agent.md`
+- Canonical skill source: `skills/<skill-name>/SKILL.md`
+- Copilot plugin package: `plugins/mission-control/`
+- Copilot plugin agent output: `plugins/mission-control/agents/`
+- Copilot plugin skill output: `plugins/mission-control/skills/`
+- Copilot build sync script: `adapters/copilot/build.ps1`
+- Copilot plugin manifest: `plugins/mission-control/plugin.json`
+- Copilot marketplace manifest: `.github/plugin/marketplace.json`
+
+## Goal: add a custom agent
+
+1. Read the plugin creation and plugin reference docs.
+2. Create or edit the canonical source file:
+
+```text
+agents/<agent-id>/agent.md
+```
+
+3. If it is a new agent, update:
+
+- `team/team.json`
+- `adapters/copilot/mapping.json`
+
+4. Run:
+
+```powershell
+.\adapters\copilot\build.ps1
+```
+
+5. Confirm the generated file exists in:
+
+```text
+plugins/mission-control/agents/
+```
+
+6. Reinstall the plugin locally for testing:
+
+```powershell
+copilot plugin install .\plugins\mission-control
+```
+
+7. Verify the agent loads in Copilot CLI.
+
+## Goal: add a skill
+
+1. Read the skills doc and plugin docs.
+2. Create the canonical source directory:
+
+```text
+skills/<skill-name>/
+```
+
+3. Add the required file:
+
+```text
+skills/<skill-name>/SKILL.md
+```
+
+4. Follow the Copilot skill rules:
+
+- the directory name must be lowercase and hyphenated
+- `SKILL.md` is required
+- `name` is required in YAML frontmatter and should typically match the directory name
+- `description` is required in YAML frontmatter
+- scripts and supporting files should live inside the same skill directory
+
+5. Be careful with `allowed-tools`:
+
+- only pre-approve powerful tools when the skill is trusted and the behavior is intended
+- avoid casually pre-approving shell access
+
+6. Run:
+
+```powershell
+.\adapters\copilot\build.ps1
+```
+
+7. Confirm the skill was synced into:
+
+```text
+plugins/mission-control/skills/<skill-name>/
+```
+
+8. Reinstall the plugin locally:
+
+```powershell
+copilot plugin install .\plugins\mission-control
+```
+
+9. Verify the skill in Copilot CLI:
+
+```text
+/skills list
+/skills info <skill-name>
+```
+
+## Goal: add a hook
+
+1. Read the hooks usage and hooks reference docs.
+2. Decide whether the hook belongs:
+
+- inside the plugin package, or
+- only as repository-level behavior
+
+3. If the hook is part of the plugin, keep it in the plugin package described by the official docs and point `plugin.json` at it when needed.
+4. Prefer cross-platform hook definitions by providing both `bash` and `powershell` entries when practical.
+5. Keep JSON valid and ensure `version` is correct.
+6. Test with the documented Copilot hook loading behavior instead of assuming hooks are discovered the same way as agents or skills.
+
+## Sync and verification
+
+After any change to agents or skills:
+
+```powershell
+.\adapters\copilot\build.ps1
+copilot plugin install .\plugins\mission-control
+```
+
+Minimum verification expectations:
+
+- custom agents: confirm the plugin installs and the agent is available
+- skills: confirm the plugin installs and the skill appears in `/skills list`
+- hooks: confirm the plugin installs and the hook file shape matches the docs
+
+## Do not do this
+
+- Do not author primary source directly in `plugins/mission-control/agents/`
+- Do not author primary source directly in `plugins/mission-control/skills/`
+- Do not add plugin metadata fields by guesswork
+- Do not assume repo-level `.github/skills` guidance is identical to plugin-packaged skills without checking the docs
