@@ -58,18 +58,20 @@ If any later section conflicts with `Operating Modes`, `Shared Request Envelope`
 - `mode: rigorous` is active only when the handoff says so because Maestro processed the explicit user phrase `ultra mode`.
 - In Agile, make the smallest acceptable change and run the narrowest relevant verification for the touched slice.
 - In Rigorous, broader verification or artifact detail may be required when the handoff says so.
-- Carl must never self-elevate the mode; return `next_action: recommend_rigorous_mode` instead.
+- Carl must never self-elevate the mode; return `next: recommend_rigorous_mode` instead.
 
 ### 1.5 Shared Request Envelope
 Every handoff consumed by Carl must include these fields:
 ```json
 {
   "handoff_id": "string (unique identifier for tracking)",
-  "goal": "string (the exact intent/task, derived from the Work Brief)",
-  "scope": ["list of specific files, directories, or systems to focus on"],
-  "constraints": ["list of strict rules, boundaries, or 'do nots'"],
-  "success_criteria": ["list of measurable conditions that define completion"],
-  "deliverables": "string (what the sub-agent must provide in its artifacts/evidence)",
+  "to": "string (agent id or display name)",
+  "goal": "string (one sentence)",
+  "scope": ["short paths, systems, or boundaries"],
+  "constraints": ["short hard limits or do-nots"],
+  "success": ["short measurable completion checks"],
+  "deliverable": "string (expected output)",
+  "custom": {}
 }
 ```
 
@@ -79,12 +81,12 @@ Every response from Carl must include these fields:
 {
   "handoff_id": "string (must match request)",
   "status": "SUCCESS | PARTIAL | FAILED | BLOCKED",
-  "summary": "string (concise explanation of what was done)",
-  "evidence": "string (terminal output, test results, or file paths verifying the change)",
-  "artifacts": ["list of modified/created files or resources"],
-  "blockers_or_gaps": "string or null (required if status is not SUCCESS)",
-  "next_action": "string or null (recommended next step for Maestro)",
-  "custom": "optional additional data relevant to the request"
+  "summary": "string (1-2 concise sentences)",
+  "evidence": ["short commands, files, or facts"],
+  "artifacts": ["short modified, created, or inspected paths"],
+  "gaps": "string or null",
+  "next": "string or null",
+  "custom": {}
 }
 ```
 

@@ -95,7 +95,13 @@
     "copilot": {
       "mapping": "adapters/copilot/mapping.json",
       "pluginPath": "plugins/mission-control",
-      "marketplaceManifest": ".github/plugin/marketplace.json"
+      "marketplaceManifest": ".github/plugin/marketplace.json",
+      "hooks": "hooks/session-trace/copilot-hooks.json",
+      "communicationSchema": "team/communication.schema.json"
+    },
+    "copilot-app": {
+      "extensionPath": ".github/extensions/mission-control",
+      "status": "best-effort-compatibility"
     },
     "claude-code": {
       "status": "reserved-for-future-implementation"

@@ -21,6 +21,14 @@ Contribution policy:
 - Copilot marketplace manifest under `.github/plugin/marketplace.json`
 - Installer scripts and Copilot adapter build scaffolding
 - Harness-specific maintainer instructions for agents, skills, and hooks
+- Session trace hook assets that write minimal Copilot lifecycle metadata to `.tmp/sessions/<sessionId>/session.json`
+- Shared communication wrapper schema and Copilot guard hooks for native Mission Control subagent handoffs
+- Safety toggles for disabling the whole Copilot plugin or bypassing Mission Control hooks, guard enforcement, or trace writing during live testing
+- GitHub Copilot app harness findings and a best-effort project extension for app-supported session/tool trace metadata, including trace-only bypass support
+- Per-event trace source labels so overlapping Copilot app and Copilot CLI hook telemetry can be attributed
+- GitHub Copilot app session-event telemetry for model, sub-agent, tool, skill, and usage metadata in the shared session trace
+- Local Copilot app SDK documentation and type-reference guidance for future extension development
 
 ### Changed
 - Added repo-wide branch naming governance for app-created worktree sessions and PR policy checks, including rejection of `feature/` branch prefixes and a preference for existing issue-backed branch naming when available.
+- Scoped communication guard enforcement to explicit Mission Control agent targets so unrelated custom agents are not blocked by the Mission Control handoff wrapper.

@@ -20,6 +20,22 @@ Use this document when changing the **GitHub Copilot CLI** adapter or plugin pac
 - Hooks usage: https://docs.github.com/en/copilot/how-tos/copilot-cli/customize-copilot/use-hooks
 - Hooks reference: https://docs.github.com/en/copilot/reference/hooks-reference
 
+### GitHub Copilot app/local SDK extensions
+
+The GitHub Copilot app harness uses the local Copilot SDK extension surface in addition to, and sometimes overlapping with, Copilot CLI plugin behavior. Before changing `.github/extensions/mission-control/`, read the installed SDK docs and types from the target machine:
+
+```text
+%LOCALAPPDATA%\Programs\GitHub Copilot\copilot-sdk\docs\extensions.md
+%LOCALAPPDATA%\Programs\GitHub Copilot\copilot-sdk\docs\agent-author.md
+%LOCALAPPDATA%\Programs\GitHub Copilot\copilot-sdk\docs\examples.md
+%LOCALAPPDATA%\Programs\GitHub Copilot\copilot-sdk\extension.d.ts
+%LOCALAPPDATA%\Programs\GitHub Copilot\copilot-sdk\session.d.ts
+%LOCALAPPDATA%\Programs\GitHub Copilot\copilot-sdk\types.d.ts
+%LOCALAPPDATA%\Programs\GitHub Copilot\copilot-sdk\generated\session-events.d.ts
+```
+
+Use SDK hooks for interception and guardrails, and `session.on(...)` session events for richer traceability. Model IDs are exposed on events such as `assistant.usage`, `assistant.message`, `tool.execution_start`, `tool.execution_complete`, `subagent.started`, `subagent.completed`, and `session.model_change` when the runtime emits those fields.
+
 ## Current repository conventions
 
 - Canonical custom-agent source: `agents/<agent-id>/agent.md`
@@ -30,6 +46,11 @@ Use this document when changing the **GitHub Copilot CLI** adapter or plugin pac
 - Copilot build sync script: `adapters/copilot/build.ps1`
 - Copilot plugin manifest: `plugins/mission-control/plugin.json`
 - Copilot marketplace manifest: `.github/plugin/marketplace.json`
+- Canonical session trace hooks: `hooks/session-trace/`
+- Canonical communication wrapper schema: `team/communication.schema.json`
+- GitHub Copilot app compatibility extension: `.github/extensions/mission-control/extension.mjs`
+- Copilot plugin hook config output: `plugins/mission-control/hooks.json`
+- Copilot plugin hook asset output: `plugins/mission-control/hooks/`
 
 ## Goal: add a custom agent
 
@@ -60,7 +81,8 @@ plugins/mission-control/agents/
 6. Reinstall the plugin locally for testing:
 
 ```powershell
-copilot plugin install .\plugins\mission-control
+$pluginPath = (Resolve-Path .\plugins\mission-control).Path
+copilot plugin install $pluginPath
 ```
 
 7. Verify the agent loads in Copilot CLI.
@@ -108,7 +130,8 @@ plugins/mission-control/skills/<skill-name>/
 8. Reinstall the plugin locally:
 
 ```powershell
-copilot plugin install .\plugins\mission-control
+$pluginPath = (Resolve-Path .\plugins\mission-control).Path
+copilot plugin install $pluginPath
 ```
 
 9. Verify the skill in Copilot CLI:
@@ -127,9 +150,14 @@ copilot plugin install .\plugins\mission-control
 - only as repository-level behavior
 
 3. If the hook is part of the plugin, keep it in the plugin package described by the official docs and point `plugin.json` at it when needed.
-4. Prefer cross-platform hook definitions by providing both `bash` and `powershell` entries when practical.
-5. Keep JSON valid and ensure `version` is correct.
-6. Test with the documented Copilot hook loading behavior instead of assuming hooks are discovered the same way as agents or skills.
+4. For session trace hooks, edit canonical files under `hooks/session-trace/`, then run `.\adapters\copilot\build.ps1` instead of hand-editing generated plugin hook copies.
+5. Prefer cross-platform hook definitions by providing both `bash` and `powershell` entries when practical.
+6. Keep JSON valid and ensure `version` is correct.
+7. Test with the documented Copilot hook loading behavior instead of assuming hooks are discovered the same way as agents or skills.
+8. Preserve the Mission Control hook bypasses unless intentionally changing safety behavior:
+   - `MISSION_CONTROL_DISABLED=1` or `.tmp/mission-control.disabled`
+   - `MISSION_CONTROL_GUARD_DISABLED=1` or `.tmp/mission-control-guard.disabled`
+   - `MISSION_CONTROL_TRACE_DISABLED=1` or `.tmp/mission-control-trace.disabled`
 
 ## Sync and verification
 
@@ -137,7 +165,8 @@ After any change to agents or skills:
 
 ```powershell
 .\adapters\copilot\build.ps1
-copilot plugin install .\plugins\mission-control
+$pluginPath = (Resolve-Path .\plugins\mission-control).Path
+copilot plugin install $pluginPath
 ```
 
 Minimum verification expectations:
@@ -145,6 +174,8 @@ Minimum verification expectations:
 - custom agents: confirm the plugin installs and the agent is available
 - skills: confirm the plugin installs and the skill appears in `/skills list`
 - hooks: confirm the plugin installs and the hook file shape matches the docs
+- hook safety: confirm `.\scripts\mission-control-toggle.ps1 -Command disable-hooks` bypasses hook behavior and `enable-hooks` restores it
+- plugin safety: in CLI builds without `copilot plugin enable/disable`, use `.\scripts\mission-control-toggle.ps1 -Command disable-plugin` to uninstall and `enable-plugin` to reinstall from `plugins/mission-control`
 
 ## Do not do this
 

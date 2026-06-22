@@ -1,0 +1,58 @@
+{
+  "version": 1,
+  "hooks": {
+    "preToolUse": [
+      {
+        "type": "command",
+        "matcher": "agent|task",
+        "bash": "if [ -f ./hooks/communication-guard.sh ]; then bash ./hooks/communication-guard.sh preToolUse; elif [ -f ./plugins/mission-control/hooks/communication-guard.sh ]; then bash ./plugins/mission-control/hooks/communication-guard.sh preToolUse; else exit 0; fi",
+        "powershell": "if (Test-Path -LiteralPath ./hooks/communication-guard.ps1) { ./hooks/communication-guard.ps1 -Event preToolUse } elseif (Test-Path -LiteralPath ./plugins/mission-control/hooks/communication-guard.ps1) { ./plugins/mission-control/hooks/communication-guard.ps1 -Event preToolUse }",
+        "timeoutSec": 10
+      }
+    ],
+    "sessionStart": [
+      {
+        "type": "command",
+        "bash": "if [ -f ./hooks/session-trace.sh ]; then bash ./hooks/session-trace.sh sessionStart; elif [ -f ./plugins/mission-control/hooks/session-trace.sh ]; then bash ./plugins/mission-control/hooks/session-trace.sh sessionStart; else exit 0; fi",
+        "powershell": "if (Test-Path -LiteralPath ./hooks/session-trace.ps1) { ./hooks/session-trace.ps1 -Event sessionStart } elseif (Test-Path -LiteralPath ./plugins/mission-control/hooks/session-trace.ps1) { ./plugins/mission-control/hooks/session-trace.ps1 -Event sessionStart }",
+        "timeoutSec": 10
+      }
+    ],
+    "sessionEnd": [
+      {
+        "type": "command",
+        "bash": "if [ -f ./hooks/session-trace.sh ]; then bash ./hooks/session-trace.sh sessionEnd; elif [ -f ./plugins/mission-control/hooks/session-trace.sh ]; then bash ./plugins/mission-control/hooks/session-trace.sh sessionEnd; else exit 0; fi",
+        "powershell": "if (Test-Path -LiteralPath ./hooks/session-trace.ps1) { ./hooks/session-trace.ps1 -Event sessionEnd } elseif (Test-Path -LiteralPath ./plugins/mission-control/hooks/session-trace.ps1) { ./plugins/mission-control/hooks/session-trace.ps1 -Event sessionEnd }",
+        "timeoutSec": 10
+      }
+    ],
+    "subagentStart": [
+      {
+        "type": "command",
+        "bash": "if [ -f ./hooks/session-trace.sh ]; then bash ./hooks/session-trace.sh subagentStart; elif [ -f ./plugins/mission-control/hooks/session-trace.sh ]; then bash ./plugins/mission-control/hooks/session-trace.sh subagentStart; else exit 0; fi",
+        "powershell": "if (Test-Path -LiteralPath ./hooks/session-trace.ps1) { ./hooks/session-trace.ps1 -Event subagentStart } elseif (Test-Path -LiteralPath ./plugins/mission-control/hooks/session-trace.ps1) { ./plugins/mission-control/hooks/session-trace.ps1 -Event subagentStart }",
+        "timeoutSec": 10
+      },
+      {
+        "type": "command",
+        "bash": "if [ -f ./hooks/communication-guard.sh ]; then bash ./hooks/communication-guard.sh subagentStart; elif [ -f ./plugins/mission-control/hooks/communication-guard.sh ]; then bash ./plugins/mission-control/hooks/communication-guard.sh subagentStart; else exit 0; fi",
+        "powershell": "if (Test-Path -LiteralPath ./hooks/communication-guard.ps1) { ./hooks/communication-guard.ps1 -Event subagentStart } elseif (Test-Path -LiteralPath ./plugins/mission-control/hooks/communication-guard.ps1) { ./plugins/mission-control/hooks/communication-guard.ps1 -Event subagentStart }",
+        "timeoutSec": 10
+      }
+    ],
+    "subagentStop": [
+      {
+        "type": "command",
+        "bash": "if [ -f ./hooks/session-trace.sh ]; then bash ./hooks/session-trace.sh subagentStop; elif [ -f ./plugins/mission-control/hooks/session-trace.sh ]; then bash ./plugins/mission-control/hooks/session-trace.sh subagentStop; else exit 0; fi",
+        "powershell": "if (Test-Path -LiteralPath ./hooks/session-trace.ps1) { ./hooks/session-trace.ps1 -Event subagentStop } elseif (Test-Path -LiteralPath ./plugins/mission-control/hooks/session-trace.ps1) { ./plugins/mission-control/hooks/session-trace.ps1 -Event subagentStop }",
+        "timeoutSec": 10
+      },
+      {
+        "type": "command",
+        "bash": "if [ -f ./hooks/communication-guard.sh ]; then bash ./hooks/communication-guard.sh subagentStop; elif [ -f ./plugins/mission-control/hooks/communication-guard.sh ]; then bash ./plugins/mission-control/hooks/communication-guard.sh subagentStop; else exit 0; fi",
+        "powershell": "if (Test-Path -LiteralPath ./hooks/communication-guard.ps1) { ./hooks/communication-guard.ps1 -Event subagentStop } elseif (Test-Path -LiteralPath ./plugins/mission-control/hooks/communication-guard.ps1) { ./plugins/mission-control/hooks/communication-guard.ps1 -Event subagentStop }",
+        "timeoutSec": 10
+      }
+    ]
+  }
+}

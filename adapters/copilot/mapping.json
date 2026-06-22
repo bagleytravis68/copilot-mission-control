@@ -3,7 +3,13 @@
     "name": "mission-control-agent-team",
     "directory": "plugins/mission-control",
     "agentsDirectory": "plugins/mission-control/agents",
-    "skillsDirectory": "plugins/mission-control/skills"
+    "skillsDirectory": "plugins/mission-control/skills",
+    "hooksSourceDirectory": "hooks/session-trace",
+    "hooksDirectory": "plugins/mission-control/hooks",
+    "hooksSourceFile": "hooks/session-trace/copilot-hooks.json",
+    "hooksFile": "plugins/mission-control/hooks.json",
+    "communicationSchema": "team/communication.schema.json",
+    "communicationSchemaFile": "plugins/mission-control/hooks/communication.schema.json"
   },
   "marketplace": {
     "name": "mission-control-marketplace",
