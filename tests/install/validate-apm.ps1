@@ -69,6 +69,15 @@ function Assert-AgentFiles {
     foreach ($agent in $expectedAgents) {
         $fileName = & $NameFromCopilotFile $agent.targetFile
         $path = Join-Path $Root $fileName
+        if (-not (Test-Path -LiteralPath $path)) {
+            throw "Expected agent file to exist for target '$Target': $path"
+        }
+    }
+}
+
+    foreach ($agent in $expectedAgents) {
+        $fileName = & $NameFromCopilotFile $agent.targetFile
+        $path = Join-Path $Root $fileName
         Assert-PathExists -Path $path
     }
 }
