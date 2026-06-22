@@ -75,13 +75,6 @@ function Assert-AgentFiles {
     }
 }
 
-    foreach ($agent in $expectedAgents) {
-        $fileName = & $NameFromCopilotFile $agent.targetFile
-        $path = Join-Path $Root $fileName
-        Assert-PathExists -Path $path
-    }
-}
-
 function Assert-CopilotHookInstall {
     param([string]$Root)
 
