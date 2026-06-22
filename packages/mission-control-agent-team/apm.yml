@@ -1,0 +1,24 @@
+name: mission-control-agent-team
+version: 0.1.0
+description: Portable Mission Control agent team and workflow-enforcement package.
+includes:
+  - .apm/agents
+  - .apm/hooks
+  - .apm/extensions
+  - .apm/skills
+  - extensions
+author:
+  name: Travis Bagley
+license: MIT
+homepage: https://github.com/bagleytravis68/copilot-mission-control
+repository: https://github.com/bagleytravis68/copilot-mission-control
+keywords:
+  - agents
+  - copilot
+  - workflow
+  - orchestration
+  - enforcement
+
+dependencies:
+  apm: []
+  mcp: []
