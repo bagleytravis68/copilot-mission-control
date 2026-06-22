@@ -1,0 +1,30 @@
+name: mission-control-workspace
+version: 0.1.0
+description: Development workspace for Mission Control APM packaging.
+author:
+  name: Travis Bagley
+license: MIT
+homepage: https://github.com/bagleytravis68/copilot-mission-control
+repository: https://github.com/bagleytravis68/copilot-mission-control
+keywords:
+  - agents
+  - copilot
+  - workflow
+  - orchestration
+  - enforcement
+
+# Keep the package target-agnostic. Consumers choose targets explicitly with
+# `apm install --target ...`, or let APM auto-detect from their harness files.
+dependencies:
+  apm:
+    - ./packages/mission-control-agent-team
+  mcp: []
+
+scripts:
+  targets: apm targets
+  sync-apm: .\adapters\apm\build.ps1 -Clean
+  preview-copilot: apm install --dry-run --target copilot --verbose
+  preview-core: apm install --dry-run --target copilot,claude,codex,agent-skills --verbose
+  validate-apm: .\tests\install\validate-apm.ps1
+  validate-apm-with-bundle-diagnostic: .\tests\install\validate-apm.ps1 -IncludeBundleDiagnostic
+  pack-apm: pwsh -NoProfile -Command "Push-Location packages\mission-control-agent-team; apm pack --dry-run --verbose; Pop-Location"

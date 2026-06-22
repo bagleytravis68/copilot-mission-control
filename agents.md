@@ -2,6 +2,8 @@
 
 This repository is a **portable agent-team package** with runtime adapters. If you are an AI agent updating this repo, do **not** assume one harness works like another. Read the official packaging and installation documentation for the harness and component type you are touching before you edit adapter, plugin, marketplace, installer, skill, or hook files.
 
+APM (`apm.yml`) is the preferred cross-harness package/install layer for future distribution work. Use APM for dependency resolution, lockfiles, target-specific file placement, bundles, marketplace artifacts, and install-time safety checks wherever it fits. Write harness-specific adapters only for runtime semantics APM cannot normalize, such as hook payload interpretation, sub-agent lifecycle events, and Copilot App SDK telemetry.
+
 ## Required workflow for AI agents
 
 1. Identify whether your change affects the **core source** or a **runtime adapter**.
@@ -19,11 +21,49 @@ This repository is a **portable agent-team package** with runtime adapters. If y
 - `skills/` is the canonical skill source.
 - `hooks/session-trace/` is the canonical Copilot session-trace hook source.
 - `.github/extensions/mission-control/` is the GitHub Copilot app compatibility extension.
+- `apm.yml` is the root APM workspace manifest for development and validation.
+- `packages/mission-control-agent-team/` is the generated APM-native package source.
+- `adapters/apm/build.ps1` syncs canonical source into the generated APM package.
 - `team/team.json` is the canonical team and packaging metadata.
 - `plugins/mission-control/` is the installable Copilot plugin package.
 - `adapters/copilot/build.ps1` syncs canonical source into the Copilot plugin package.
 
 Do not treat generated runtime packaging as the primary authoring surface unless the change is explicitly runtime-only.
+
+## APM packaging direction
+
+Before adding or expanding custom installation scripts, check whether APM can own the install path instead.
+
+Use these commands for APM package validation:
+
+```powershell
+.\adapters\apm\build.ps1 -Clean
+apm targets
+$scratch = Join-Path $env:TEMP "mission-control-apm"
+Remove-Item -LiteralPath $scratch -Recurse -Force -ErrorAction SilentlyContinue
+New-Item -ItemType Directory -Path $scratch | Out-Null
+apm install --root $scratch --target copilot --verbose
+apm install --root $scratch --target copilot,claude,codex,agent-skills --verbose
+```
+
+Prefer the scripted validation entry point when changing APM packaging:
+
+```powershell
+.\tests\install\validate-apm.ps1
+```
+
+Keep `apm.yml` target-agnostic unless there is a deliberate reason to force targets for all consumers. Prefer explicit `--target` during validation and consumer documentation.
+
+The current `plugins/mission-control` directory is a Copilot plugin bundle and can be previewed through APM as a Copilot local bundle. Do not use that legacy bundle as proof of clean Claude, Codex, or shared `.agents/skills` support. Cross-harness support should be validated from `packages/mission-control-agent-team/`, which contains the generated APM-native `.apm/` package layout.
+
+Important APM fit notes:
+
+- APM can deploy agents, skills, hooks, instructions, prompts/commands, MCP servers, plugin bundles, and experimental Copilot canvas extensions across supported harnesses.
+- APM's experimental canvas primitive can deploy `.apm/extensions/<name>/extension.mjs` to `.github/extensions/<name>/`, which is the relevant migration path for the current Copilot App compatibility extension.
+- APM's experimental `copilot-app` target installs scheduled workflow prompts into the Copilot App database; it does not replace the local SDK extension used for session/tool/subagent telemetry.
+- APM does not make hook semantics universal. Mission Control guard/trace behavior may still need narrow harness-specific code even when APM handles file placement.
+- Keep the generated APM package clean of install outputs such as `.github/`, `.claude/`, `.codex/`, `.agents/`, `apm_modules/`, and `apm.lock.yaml`; use scratch roots for install validation.
+- Prefer source dependency installs for Mission Control until APM bundle installs preserve referenced hook script assets. `apm pack` can include the assets, but `apm install <bundle>` in APM 0.21 only deploys plugin-native agents and merged `hooks.json`, not Copilot hook script assets.
 
 ## Harness instruction index
 

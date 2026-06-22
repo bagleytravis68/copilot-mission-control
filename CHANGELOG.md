@@ -16,6 +16,8 @@ Contribution policy:
 ## [Unreleased]
 
 ### Added
+- APM workspace manifest, generated APM-native package layout, adapter sync script, and APM-first installation guidance for cross-harness Mission Control packaging.
+- APM install validation script and GitHub Actions job for fresh-runner source package install checks.
 - Generic agent-team source layout under `agents/` and `skills/`
 - GitHub Copilot CLI plugin packaging under `plugins/mission-control/`
 - Copilot marketplace manifest under `.github/plugin/marketplace.json`
@@ -32,3 +34,7 @@ Contribution policy:
 ### Changed
 - Added repo-wide branch naming governance for app-created worktree sessions and PR policy checks, including rejection of `feature/` branch prefixes and a preference for existing issue-backed branch naming when available.
 - Scoped communication guard enforcement to explicit Mission Control agent targets so unrelated custom agents are not blocked by the Mission Control handoff wrapper.
+
+### Fixed
+- Serialized GitHub Copilot app extension trace writes so concurrent SDK events do not crash the extension.
+- Ignored generated session trace files while preserving `.tmp/sessions/.gitkeep`.

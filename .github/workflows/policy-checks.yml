@@ -60,3 +60,26 @@ jobs:
             echo "::error::CHANGELOG.md must be updated under the Unreleased section in this PR unless the PR is labeled 'no-changelog'."
             exit 1
           fi
+
+  apm-install-validation:
+    name: APM install validation
+    runs-on: ubuntu-latest
+    env:
+      APM_VERSION: v0.21.0
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v5
+
+      - name: Install APM
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -sSL https://aka.ms/apm-unix | VERSION="$APM_VERSION" sh
+          echo "$HOME/.apm/bin" >> "$GITHUB_PATH"
+          export PATH="$HOME/.apm/bin:$PATH"
+          apm --version
+
+      - name: Validate APM source package installs
+        shell: pwsh
+        run: .\tests\install\validate-apm.ps1

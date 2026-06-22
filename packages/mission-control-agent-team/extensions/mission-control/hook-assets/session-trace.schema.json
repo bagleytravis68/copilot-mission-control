@@ -1,0 +1,400 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/bagleytravis68/copilot-mission-control/schemas/session-trace.schema.json",
+  "title": "Mission Control session trace",
+  "type": "object",
+  "required": [
+    "schemaVersion",
+    "harness",
+    "sessionId",
+    "repoRoot",
+    "status",
+    "startedAt",
+    "agents",
+    "handoffs",
+    "events"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "harness": {
+      "type": "string"
+    },
+    "sessionId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "repoRoot": {
+      "type": "string",
+      "minLength": 1
+    },
+    "status": {
+      "enum": [
+        "running",
+        "complete",
+        "error",
+        "timeout",
+        "aborted",
+        "user_exit"
+      ]
+    },
+    "startedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "endedAt": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date-time"
+    },
+    "agents": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/agent"
+      }
+    },
+    "handoffs": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/handoff"
+      }
+    },
+    "events": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/event"
+      }
+    }
+  },
+  "$defs": {
+    "agent": {
+      "type": "object",
+      "required": [
+        "name",
+        "status",
+        "startedAt",
+        "handoffIds"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "displayName": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "description": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "status": {
+          "enum": [
+            "running",
+            "complete",
+            "failed"
+          ]
+        },
+        "startedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "completedAt": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date-time"
+        },
+        "handoffIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "model": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "agentId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "toolCallId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "handoff": {
+      "type": "object",
+      "required": [
+        "handoffId",
+        "fromAgent",
+        "toAgent",
+        "status",
+        "createdAt"
+      ],
+      "properties": {
+        "handoffId": {
+          "type": "string"
+        },
+        "fromAgent": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "toAgent": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "status": {
+          "enum": [
+            "created",
+            "running",
+            "complete",
+            "partial",
+            "failed",
+            "blocked"
+          ]
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "completedAt": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date-time"
+        }
+      },
+      "additionalProperties": false
+    },
+    "event": {
+      "type": "object",
+      "required": [
+        "type",
+        "at",
+        "eventSource"
+      ],
+      "properties": {
+        "type": {
+          "type": "string"
+        },
+        "at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "eventSource": {
+          "type": "string",
+          "description": "Runtime adapter that emitted this event, for example copilot-cli-hook or copilot-app-extension."
+        },
+        "agentName": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "status": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "reason": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "sdkEventType": {
+          "type": "string"
+        },
+        "eventId": {
+          "type": "string"
+        },
+        "parentEventId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "agentId": {
+          "type": "string"
+        },
+        "ephemeral": {
+          "type": "boolean"
+        },
+        "agentDisplayName": {
+          "type": "string"
+        },
+        "agentDescription": {
+          "type": "string"
+        },
+        "model": {
+          "type": "string"
+        },
+        "previousModel": {
+          "type": "string"
+        },
+        "reasoningEffort": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "contextTier": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "copilotVersion": {
+          "type": "string"
+        },
+        "producer": {
+          "type": "string"
+        },
+        "branch": {
+          "type": "string"
+        },
+        "toolCallId": {
+          "type": "string"
+        },
+        "parentToolCallId": {
+          "type": "string"
+        },
+        "turnId": {
+          "type": "string"
+        },
+        "messageId": {
+          "type": "string"
+        },
+        "toolName": {
+          "type": "string"
+        },
+        "serverName": {
+          "type": "string"
+        },
+        "toolArgs": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "additionalProperties": true
+        },
+        "toolNames": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": "string"
+          }
+        },
+        "resultType": {
+          "type": "string"
+        },
+        "sandboxed": {
+          "type": "boolean"
+        },
+        "initiator": {
+          "type": "string"
+        },
+        "inputTokens": {
+          "type": "number"
+        },
+        "outputTokens": {
+          "type": "number"
+        },
+        "reasoningTokens": {
+          "type": "number"
+        },
+        "cacheReadTokens": {
+          "type": "number"
+        },
+        "cacheWriteTokens": {
+          "type": "number"
+        },
+        "finishReason": {
+          "type": "string"
+        },
+        "durationMs": {
+          "type": "number"
+        },
+        "apiEndpoint": {
+          "type": "string"
+        },
+        "totalTokens": {
+          "type": "number"
+        },
+        "totalToolCalls": {
+          "type": "number"
+        },
+        "contentLength": {
+          "type": "number"
+        },
+        "toolRequestCount": {
+          "type": "number"
+        },
+        "skillName": {
+          "type": "string"
+        },
+        "source": {
+          "type": "string"
+        },
+        "trigger": {
+          "type": "string"
+        },
+        "pluginName": {
+          "type": "string"
+        },
+        "pluginVersion": {
+          "type": "string"
+        },
+        "allowedToolsCount": {
+          "type": "number"
+        },
+        "statusCode": {
+          "type": "number"
+        },
+        "errorLength": {
+          "type": "number"
+        },
+        "promptLength": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "errorContext": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "recoverable": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

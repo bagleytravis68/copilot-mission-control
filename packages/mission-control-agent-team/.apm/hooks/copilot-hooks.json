@@ -1,0 +1,58 @@
+{
+  "version": 1,
+  "hooks": {
+    "preToolUse": [
+      {
+        "type": "command",
+        "matcher": "agent|task",
+        "bash": "bash ${PLUGIN_ROOT}/extensions/mission-control/hook-assets/communication-guard.sh preToolUse",
+        "powershell": "& '${PLUGIN_ROOT}/extensions/mission-control/hook-assets/communication-guard.ps1' -Event preToolUse",
+        "timeoutSec": 10
+      }
+    ],
+    "sessionStart": [
+      {
+        "type": "command",
+        "bash": "bash ${PLUGIN_ROOT}/extensions/mission-control/hook-assets/session-trace.sh sessionStart",
+        "powershell": "& '${PLUGIN_ROOT}/extensions/mission-control/hook-assets/session-trace.ps1' -Event sessionStart",
+        "timeoutSec": 10
+      }
+    ],
+    "sessionEnd": [
+      {
+        "type": "command",
+        "bash": "bash ${PLUGIN_ROOT}/extensions/mission-control/hook-assets/session-trace.sh sessionEnd",
+        "powershell": "& '${PLUGIN_ROOT}/extensions/mission-control/hook-assets/session-trace.ps1' -Event sessionEnd",
+        "timeoutSec": 10
+      }
+    ],
+    "subagentStart": [
+      {
+        "type": "command",
+        "bash": "bash ${PLUGIN_ROOT}/extensions/mission-control/hook-assets/session-trace.sh subagentStart",
+        "powershell": "& '${PLUGIN_ROOT}/extensions/mission-control/hook-assets/session-trace.ps1' -Event subagentStart",
+        "timeoutSec": 10
+      },
+      {
+        "type": "command",
+        "bash": "bash ${PLUGIN_ROOT}/extensions/mission-control/hook-assets/communication-guard.sh subagentStart",
+        "powershell": "& '${PLUGIN_ROOT}/extensions/mission-control/hook-assets/communication-guard.ps1' -Event subagentStart",
+        "timeoutSec": 10
+      }
+    ],
+    "subagentStop": [
+      {
+        "type": "command",
+        "bash": "bash ${PLUGIN_ROOT}/extensions/mission-control/hook-assets/session-trace.sh subagentStop",
+        "powershell": "& '${PLUGIN_ROOT}/extensions/mission-control/hook-assets/session-trace.ps1' -Event subagentStop",
+        "timeoutSec": 10
+      },
+      {
+        "type": "command",
+        "bash": "bash ${PLUGIN_ROOT}/extensions/mission-control/hook-assets/communication-guard.sh subagentStop",
+        "powershell": "& '${PLUGIN_ROOT}/extensions/mission-control/hook-assets/communication-guard.ps1' -Event subagentStop",
+        "timeoutSec": 10
+      }
+    ]
+  }
+}
