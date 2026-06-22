@@ -176,7 +176,13 @@ function Test-CoreTargetInstall {
 
 function Test-BundleDiagnostic {
     $packageRoot = Join-Path $repoRoot "packages\mission-control-agent-team"
-    $bundleRoot = Join-Path $packageRoot "build\mission-control-agent-team-0.1.0"
+    $packageManifest = Get-Content -LiteralPath (Join-Path $packageRoot "apm.yml") -Raw
+    $packageVersion = ($packageManifest -split "`n" | Where-Object { $_ -match '^version:\s*(.+)\s*$' } | ForEach-Object { $matches[1] } | Select-Object -First 1)
+    if ([string]::IsNullOrWhiteSpace($packageVersion)) {
+        throw "Unable to determine package version from $packageRoot\apm.yml"
+    }
+
+    $bundleRoot = Join-Path $packageRoot ("build\\mission-control-agent-team-{0}" -f $packageVersion)
     $bundleScratch = Join-Path $ScratchRoot "bundle-diagnostic"
 
     Push-Location $packageRoot
