@@ -61,9 +61,10 @@ The Copilot app extension owns only app-supported compatibility behavior:
 
 - project extension discovery through `.github/extensions/mission-control/extension.mjs`
 - SDK hook callbacks for session, prompt, tool, and error events
-- best-effort `.tmp/sessions/<sessionId>/app-session.json` metadata
+- SDK session-event subscriptions for model, sub-agent, tool, skill, and usage metadata
+- best-effort `.tmp/sessions/<sessionId>/session.json` metadata with `eventSource: "copilot-app-extension"`
 
-The app SDK hook surface is not identical to Copilot CLI plugin hooks. In particular, the local SDK supports `onPreToolUse`, `onPreMcpToolCall`, `onPostToolUse`, `onPostToolUseFailure`, `onUserPromptSubmitted`, `onSessionStart`, `onSessionEnd`, and `onErrorOccurred`; it does not expose the same `subagentStart`/`subagentStop` hooks used by Copilot CLI hook configuration.
+The app SDK hook surface is not identical to Copilot CLI plugin hooks. In particular, the local SDK supports `onPreToolUse`, `onPreMcpToolCall`, `onPostToolUse`, `onPostToolUseFailure`, `onUserPromptSubmitted`, `onSessionStart`, `onSessionEnd`, and `onErrorOccurred`; it does not expose the same hook callback names as Copilot CLI `subagentStart`/`subagentStop`. For richer app telemetry, use the SDK session event stream (`session.on(...)`), which includes `subagent.started`, `subagent.completed`, `assistant.usage`, `assistant.message`, `tool.execution_start`, `tool.execution_complete`, and `session.model_change`.
 
 ### 3. Install surfaces
 
@@ -116,6 +117,30 @@ Worktree branch naming:
 2. Rename the branch once, immediately after session creation and before substantive work, by using the app's branch rename capability.
 3. If there is already an issue for the work, prefer using that existing issue as the documentation anchor and include its number in the branch name when practical. Work without an issue is still acceptable when none exists.
 4. Keep the branch name intent-first and kebab-case after the prefix, for example `fix/repair-version-check` or `docs/123-clarify-plugin-install`.
+
+## Copilot development references
+
+Public GitHub Copilot CLI plugin and hook docs are useful for plugin-packaged agents, skills, hooks, and marketplace behavior:
+
+- Plugin creation: https://docs.github.com/en/copilot/how-tos/copilot-cli/customize-copilot/plugins-creating
+- Plugin marketplace: https://docs.github.com/en/copilot/how-tos/copilot-cli/customize-copilot/plugins-marketplace
+- Plugin installation: https://docs.github.com/en/copilot/how-tos/copilot-cli/customize-copilot/plugins-finding-installing
+- Plugin reference: https://docs.github.com/en/copilot/reference/copilot-cli-reference/cli-plugin-reference
+- Hooks reference: https://docs.github.com/en/copilot/reference/hooks-reference
+
+The GitHub Copilot app/local extension SDK is documented primarily in the installed app bundle, not the public CLI plugin docs. On Windows, read these files before changing `.github/extensions/mission-control/`:
+
+```text
+%LOCALAPPDATA%\Programs\GitHub Copilot\copilot-sdk\docs\extensions.md
+%LOCALAPPDATA%\Programs\GitHub Copilot\copilot-sdk\docs\agent-author.md
+%LOCALAPPDATA%\Programs\GitHub Copilot\copilot-sdk\docs\examples.md
+%LOCALAPPDATA%\Programs\GitHub Copilot\copilot-sdk\extension.d.ts
+%LOCALAPPDATA%\Programs\GitHub Copilot\copilot-sdk\session.d.ts
+%LOCALAPPDATA%\Programs\GitHub Copilot\copilot-sdk\types.d.ts
+%LOCALAPPDATA%\Programs\GitHub Copilot\copilot-sdk\generated\session-events.d.ts
+```
+
+Use `extensions_manage({ operation: "guide" })` before authoring app extensions in this harness, then reload with `extensions_reload({})` and inspect with `extensions_manage({ operation: "inspect", name: "mission-control" })`.
 
 When to bump:
 
@@ -248,19 +273,21 @@ Mission Control includes a lightweight Copilot hook package that writes readable
 .tmp/sessions/<sessionId>/session.json
 ```
 
-The trace is intentionally minimal. It records the Copilot `sessionId`, repository root path, session start and end times, sub-agent names, sub-agent start and completion times, statuses, and reserved handoff ID fields for correlation. It does **not** record prompt text, tool results, command output, secrets, or full handoff payload contents.
+The trace is intentionally metadata-only. It records the Copilot `sessionId`, repository root path, session start and end times, sub-agent names, model identifiers when the harness exposes them, sub-agent start and completion times, statuses, tool call IDs, turn IDs, token counts, durations, and reserved handoff ID fields for correlation. It does **not** record prompt text, tool results, command output, secrets, or full handoff payload contents.
 
 The trace format is defined in `hooks/session-trace/session-trace.schema.json`. Runtime output under `.tmp/` is ignored by git, except for `.tmp/sessions/.gitkeep` so the expected directory exists in fresh checkouts.
 
-The GitHub Copilot app extension writes a separate best-effort app trace under:
+The GitHub Copilot app extension appends best-effort app metadata to the same session trace:
 
 ```text
-.tmp/sessions/<sessionId>/app-session.json
+.tmp/sessions/<sessionId>/session.json
 ```
 
-This app trace uses only events exposed by the local app SDK extension surface. It may observe tool calls and session events, but it should not be treated as equivalent to Copilot CLI plugin `subagentStart`/`subagentStop` telemetry. It honors both the all-hooks bypass and the trace-only bypass.
+This app trace uses only events exposed by the local app SDK extension surface. Hook callbacks observe prompt/tool/session interception points; `session.on(...)` observes richer timeline events such as `subagent.started`, `subagent.completed`, `assistant.usage`, `assistant.message`, `tool.execution_start`, `tool.execution_complete`, `skill.invoked`, and `session.model_change`. Those session events can expose model IDs and correlation IDs that are not available in the hook callback inputs. The app extension honors both the all-hooks bypass and the trace-only bypass.
 
-In this harness, the project extension was verified to load and capture app `postToolUse` events such as `extensions_reload`, `extensions_manage`, `powershell`, and `rg`. Treat other registered SDK hooks as best-effort until each event is observed in the target app/runtime version.
+The GitHub Copilot app may invoke runtime paths that also trigger Copilot CLI-style hooks. When both adapters observe the same session, trace events include `eventSource` values such as `copilot-app-extension` and `copilot-cli-hook` so overlapping telemetry is attributable.
+
+In this harness, the project extension was verified to load and capture app tool events and Copilot CLI-style hook overlap. Treat each SDK event as runtime-version-sensitive until observed in the target app/runtime version.
 
 ## Communication wrapper
 
@@ -272,7 +299,7 @@ team/communication.schema.json
 
 The request wrapper uses `handoff_id`, `to`, `goal`, `scope`, `constraints`, `success`, `deliverable`, and optional `custom`. The response wrapper uses `handoff_id`, `status`, `summary`, `evidence`, `artifacts`, `gaps`, `next`, and optional `custom`.
 
-The Copilot plugin includes guard hooks that preserve native Copilot subagent execution while adding deterministic checks where Copilot exposes lifecycle events. The guard injects the response requirement into Mission Control subagent prompts, validates observable native `agent`/`task` tool handoff payloads when they target Mission Control agents or include `handoff_id`, and can block malformed Mission Control subagent responses for correction. It does not shell out to nested Copilot CLI sessions.
+The Copilot plugin includes guard hooks that preserve native Copilot subagent execution while adding deterministic checks where Copilot exposes lifecycle events. The guard injects the response requirement into Mission Control subagent prompts, validates observable native `agent`/`task` tool handoff payloads only when they explicitly target Mission Control agents, and can block malformed Mission Control subagent responses for correction. It does not shell out to nested Copilot CLI sessions, and it should not enforce the wrapper for unrelated custom agents or ordinary subagent calls.
 
 ## Safety toggles
 

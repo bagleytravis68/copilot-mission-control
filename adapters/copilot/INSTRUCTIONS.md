@@ -20,6 +20,22 @@ Use this document when changing the **GitHub Copilot CLI** adapter or plugin pac
 - Hooks usage: https://docs.github.com/en/copilot/how-tos/copilot-cli/customize-copilot/use-hooks
 - Hooks reference: https://docs.github.com/en/copilot/reference/hooks-reference
 
+### GitHub Copilot app/local SDK extensions
+
+The GitHub Copilot app harness uses the local Copilot SDK extension surface in addition to, and sometimes overlapping with, Copilot CLI plugin behavior. Before changing `.github/extensions/mission-control/`, read the installed SDK docs and types from the target machine:
+
+```text
+%LOCALAPPDATA%\Programs\GitHub Copilot\copilot-sdk\docs\extensions.md
+%LOCALAPPDATA%\Programs\GitHub Copilot\copilot-sdk\docs\agent-author.md
+%LOCALAPPDATA%\Programs\GitHub Copilot\copilot-sdk\docs\examples.md
+%LOCALAPPDATA%\Programs\GitHub Copilot\copilot-sdk\extension.d.ts
+%LOCALAPPDATA%\Programs\GitHub Copilot\copilot-sdk\session.d.ts
+%LOCALAPPDATA%\Programs\GitHub Copilot\copilot-sdk\types.d.ts
+%LOCALAPPDATA%\Programs\GitHub Copilot\copilot-sdk\generated\session-events.d.ts
+```
+
+Use SDK hooks for interception and guardrails, and `session.on(...)` session events for richer traceability. Model IDs are exposed on events such as `assistant.usage`, `assistant.message`, `tool.execution_start`, `tool.execution_complete`, `subagent.started`, `subagent.completed`, and `session.model_change` when the runtime emits those fields.
+
 ## Current repository conventions
 
 - Canonical custom-agent source: `agents/<agent-id>/agent.md`
@@ -32,6 +48,7 @@ Use this document when changing the **GitHub Copilot CLI** adapter or plugin pac
 - Copilot marketplace manifest: `.github/plugin/marketplace.json`
 - Canonical session trace hooks: `hooks/session-trace/`
 - Canonical communication wrapper schema: `team/communication.schema.json`
+- GitHub Copilot app compatibility extension: `.github/extensions/mission-control/extension.mjs`
 - Copilot plugin hook config output: `plugins/mission-control/hooks.json`
 - Copilot plugin hook asset output: `plugins/mission-control/hooks/`
 

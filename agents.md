@@ -74,15 +74,22 @@ The GitHub Copilot app harness uses the local Copilot SDK extension surface, not
 - `%LOCALAPPDATA%\Programs\GitHub Copilot\copilot-sdk\docs\agent-author.md`
 - `%LOCALAPPDATA%\Programs\GitHub Copilot\copilot-sdk\docs\examples.md`
 - `%LOCALAPPDATA%\Programs\GitHub Copilot\copilot-sdk\index.d.ts`
+- `%LOCALAPPDATA%\Programs\GitHub Copilot\copilot-sdk\extension.d.ts`
+- `%LOCALAPPDATA%\Programs\GitHub Copilot\copilot-sdk\session.d.ts`
+- `%LOCALAPPDATA%\Programs\GitHub Copilot\copilot-sdk\types.d.ts`
+- `%LOCALAPPDATA%\Programs\GitHub Copilot\copilot-sdk\generated\session-events.d.ts`
 
 Current SDK findings:
 
 - Project extensions are discovered from `.github/extensions/<name>/extension.mjs`.
 - Extensions call `joinSession()` and can register tools, commands, canvases, and SDK hooks.
 - Supported SDK hooks include `onPreToolUse`, `onPreMcpToolCall`, `onPostToolUse`, `onPostToolUseFailure`, `onUserPromptSubmitted`, `onSessionStart`, `onSessionEnd`, and `onErrorOccurred`.
-- The local SDK hook surface does **not** expose the same `subagentStart` and `subagentStop` hooks used by Copilot CLI hook configuration.
-- In this app harness, the project extension has been verified to load and capture `postToolUse` events. Treat other SDK hook events as best-effort until observed in the target app/runtime version.
+- The local SDK hook callback surface does **not** expose the same hook names as Copilot CLI `subagentStart` and `subagentStop` hook configuration.
+- The SDK session event stream is richer than hook callbacks. Use `session.on(...)` and `generated/session-events.d.ts` for model/subagent/tool telemetry. Useful event types include `subagent.started`, `subagent.completed`, `subagent.failed`, `assistant.usage`, `assistant.message`, `tool.execution_start`, `tool.execution_complete`, `skill.invoked`, `model.call_failure`, and `session.model_change`.
+- Model identity is available from session events when the runtime emits it, especially `subagent.started.data.model`, `subagent.completed.data.model`, `assistant.usage.data.model`, `assistant.message.data.model`, `tool.execution_start.data.model`, `tool.execution_complete.data.model`, and `session.model_change.data.newModel`.
+- In this app harness, the project extension has been verified to load and capture app tool events and session-event telemetry. Treat each SDK event as best-effort until observed in the target app/runtime version.
 - The Copilot app compatibility extension honors `.tmp/mission-control.disabled`, `.tmp/mission-control-trace.disabled`, `MISSION_CONTROL_DISABLED=1`, and `MISSION_CONTROL_TRACE_DISABLED=1`.
+- The Copilot app may invoke runtime paths that also trigger Copilot CLI-style hooks. Trace events must include an `eventSource` field, currently `copilot-app-extension` or `copilot-cli-hook`, so overlapping telemetry remains attributable.
 
 Do not infer Copilot app behavior from Copilot CLI plugin behavior, and do not infer Copilot CLI plugin behavior from repo-local custom-agent behavior alone.
 
@@ -132,6 +139,7 @@ Do not infer Copilot app behavior from Copilot CLI plugin behavior, and do not i
 5. Prefer cross-platform hook commands when practical by providing both `bash` and `powershell` entries.
 6. Keep hook JSON valid and versioned correctly.
 7. Verify hook behavior with the documented Copilot hook loading model instead of assuming plugin and repo hooks behave the same way.
+8. Keep communication guard enforcement scoped to Mission Control agents only. The guard should not block unrelated custom agents, even if their prompt uses generic fields such as `handoff_id`.
 
 ### Goal: update the repository version
 

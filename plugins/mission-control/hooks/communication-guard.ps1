@@ -16,17 +16,17 @@ if (
     exit 0
 }
 
-$missionAgents = @(
-    "maestro", "maestro (orchestrator)",
-    "pax", "pax (planner)",
-    "scout", "scout (explorer)",
-    "ava", "ava (architect)",
-    "carl", "carl (coder)",
-    "tess", "tess (tester)",
-    "sera", "sera (security)",
-    "riley", "riley (relay)",
-    "sam", "sam (scribe)",
-    "libby", "libby (librarian)"
+$missionAgentPatterns = @(
+    "maestro", "maestro-orchestrator", "maestro \(orchestrator\)", "mission-control-agent-team:maestro-orchestrator",
+    "pax", "pax-planner", "pax \(planner\)", "mission-control-agent-team:pax-planner",
+    "scout", "scout-explorer", "scout \(explorer\)", "mission-control-agent-team:scout-explorer",
+    "ava", "ava-architect", "ava \(architect\)", "mission-control-agent-team:ava-architect",
+    "carl", "carl-coder", "carl \(coder\)", "mission-control-agent-team:carl-coder",
+    "tess", "tess-tester", "tess \(tester\)", "mission-control-agent-team:tess-tester",
+    "sera", "sera-security", "sera \(security\)", "mission-control-agent-team:sera-security",
+    "riley", "riley-relay", "riley \(relay\)", "mission-control-agent-team:riley-relay",
+    "sam", "sam-scribe", "sam \(scribe\)", "mission-control-agent-team:sam-scribe",
+    "libby", "libby-librarian", "libby \(librarian\)", "mission-control-agent-team:libby-librarian"
 )
 
 function Test-MissionAgentText {
@@ -37,8 +37,8 @@ function Test-MissionAgentText {
     }
 
     $normalized = $Text.ToLowerInvariant()
-    foreach ($agent in $missionAgents) {
-        if ($normalized.Contains($agent)) {
+    foreach ($pattern in $missionAgentPatterns) {
+        if ($normalized -match "(?<![a-z0-9_-])$pattern(?![a-z0-9_-])") {
             return $true
         }
     }
@@ -72,6 +72,80 @@ function Get-Strings {
     }
 
     return $strings
+}
+
+function ConvertTo-GuardHashtable {
+    param($Value)
+
+    if ($null -eq $Value) {
+        return $null
+    }
+
+    if ($Value -is [System.Collections.IDictionary]) {
+        $table = @{}
+        foreach ($key in $Value.Keys) {
+            $table[$key] = ConvertTo-GuardHashtable -Value $Value[$key]
+        }
+        return $table
+    }
+
+    if ($Value -is [System.Management.Automation.PSCustomObject]) {
+        $table = @{}
+        foreach ($property in $Value.PSObject.Properties) {
+            $table[$property.Name] = ConvertTo-GuardHashtable -Value $property.Value
+        }
+        return $table
+    }
+
+    if ($Value -is [System.Collections.IEnumerable] -and $Value -isnot [string]) {
+        $items = @()
+        foreach ($item in $Value) {
+            $items += ,(ConvertTo-GuardHashtable -Value $item)
+        }
+        return ,$items
+    }
+
+    return $Value
+}
+
+function Get-FirstValue {
+    param(
+        [System.Collections.IDictionary]$Object,
+        [string[]]$Names,
+        $Default = $null
+    )
+
+    foreach ($name in $Names) {
+        if ($Object.ContainsKey($name) -and $null -ne $Object[$name]) {
+            return $Object[$name]
+        }
+    }
+
+    return $Default
+}
+
+function Test-MissionControlRequest {
+    param(
+        $ToolArgs,
+        [array]$JsonObjects,
+        [string]$CombinedText
+    )
+
+    foreach ($object in $JsonObjects) {
+        if ($object.ContainsKey("to") -and (Test-MissionAgentText -Text ([string]$object.to))) {
+            return $true
+        }
+    }
+
+    if ($ToolArgs -is [System.Collections.IDictionary]) {
+        foreach ($field in @("to", "agent", "agentName", "agent_name", "name", "subagent", "target", "targetAgent", "target_agent")) {
+            if ($ToolArgs.ContainsKey($field) -and (Test-MissionAgentText -Text ([string]$ToolArgs[$field]))) {
+                return $true
+            }
+        }
+    }
+
+    return Test-MissionAgentText -Text $CombinedText
 }
 
 function Get-JsonObjectsFromText {
@@ -116,7 +190,7 @@ function Get-JsonObjectsFromText {
                 if ($depth -eq 0) {
                     $candidate = $Text.Substring($start, $index - $start + 1)
                     try {
-                        $objects += ,($candidate | ConvertFrom-Json -AsHashtable -Depth 100)
+                        $objects += ,(ConvertTo-GuardHashtable -Value ($candidate | ConvertFrom-Json))
                     }
                     catch {
                     }
@@ -231,10 +305,10 @@ try {
         exit 0
     }
 
-    $payload = $raw | ConvertFrom-Json -AsHashtable -Depth 100
+    $payload = ConvertTo-GuardHashtable -Value ($raw | ConvertFrom-Json)
 
     if ($Event -eq "subagentStart") {
-        $agentName = [string]($payload.agentName ?? $payload.agent_name ?? "")
+        $agentName = [string](Get-FirstValue -Object $payload -Names @("agentName", "agent_name") -Default "")
         if (Test-MissionAgentText -Text $agentName) {
             @{ additionalContext = Get-WrapperInstruction } | ConvertTo-Json -Compress
             exit 0
@@ -242,20 +316,21 @@ try {
     }
 
     if ($Event -eq "preToolUse") {
-        $toolName = [string]($payload.toolName ?? $payload.tool_name ?? "")
+        $toolName = [string](Get-FirstValue -Object $payload -Names @("toolName", "tool_name") -Default "")
         if ($toolName -notmatch "^(agent|task)$") {
             Write-Output "{}"
             exit 0
         }
 
-        $strings = Get-Strings -Value ($payload.toolArgs ?? $payload.tool_input)
+        $toolArgs = Get-FirstValue -Object $payload -Names @("toolArgs", "tool_input")
+        $strings = Get-Strings -Value $toolArgs
         $combined = ($strings -join "`n")
-        if (-not (Test-MissionAgentText -Text $combined) -and -not $combined.Contains("handoff_id")) {
+        $objects = Get-JsonObjectsFromText -Text $combined
+        if (-not (Test-MissionControlRequest -ToolArgs $toolArgs -JsonObjects $objects -CombinedText $combined)) {
             Write-Output "{}"
             exit 0
         }
 
-        $objects = Get-JsonObjectsFromText -Text $combined
         $request = $objects | Where-Object { $_.ContainsKey("handoff_id") } | Select-Object -First 1
         if ($null -eq $request) {
             @{
@@ -276,13 +351,13 @@ try {
     }
 
     if ($Event -eq "subagentStop") {
-        $agentName = [string]($payload.agentName ?? $payload.agent_name ?? "")
+        $agentName = [string](Get-FirstValue -Object $payload -Names @("agentName", "agent_name") -Default "")
         if (-not (Test-MissionAgentText -Text $agentName)) {
             Write-Output "{}"
             exit 0
         }
 
-        $transcriptPath = [string]($payload.transcriptPath ?? $payload.transcript_path ?? "")
+        $transcriptPath = [string](Get-FirstValue -Object $payload -Names @("transcriptPath", "transcript_path") -Default "")
         if (-not (Test-Path -LiteralPath $transcriptPath)) {
             Write-Output "{}"
             exit 0

@@ -102,12 +102,16 @@ try {
     Ensure-Key -Table $trace -Key "agents" -Value ([ordered]@{})
     Ensure-Key -Table $trace -Key "handoffs" -Value @()
     Ensure-Key -Table $trace -Key "events" -Value @()
+    if ($trace.harness -eq "github-copilot-app") {
+        $trace.harness = "multi"
+    }
     $trace.sessionId = $sessionId
     $trace.repoRoot = $repoRoot
 
     $eventRecord = [ordered]@{
         type = $Event
         at = $at
+        eventSource = "copilot-cli-hook"
         agentName = $null
         status = $null
         reason = $null
@@ -174,7 +178,9 @@ try {
     }
 
     $trace.events = @($trace.events) + $eventRecord
-    $trace | ConvertTo-Json -Depth 100 | Set-Content -LiteralPath $tracePath -Encoding utf8
+    $tempPath = Join-Path $sessionDir ("session.{0}.{1}.tmp" -f $PID, ([DateTimeOffset]::UtcNow.ToUnixTimeMilliseconds()))
+    $trace | ConvertTo-Json -Depth 100 | Set-Content -LiteralPath $tempPath -Encoding utf8
+    Move-Item -LiteralPath $tempPath -Destination $tracePath -Force
 }
 catch {
     [Console]::Error.WriteLine("Mission Control session trace hook skipped: $($_.Exception.Message)")

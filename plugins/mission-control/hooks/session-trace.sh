@@ -70,12 +70,15 @@ try:
     trace.setdefault("agents", {})
     trace.setdefault("handoffs", [])
     trace.setdefault("events", [])
+    if trace.get("harness") == "github-copilot-app":
+        trace["harness"] = "multi"
     trace["sessionId"] = session_id
     trace["repoRoot"] = repo_root
 
     event_record = {
         "type": event,
         "at": at,
+        "eventSource": "copilot-cli-hook",
         "agentName": None,
         "status": None,
         "reason": None,
@@ -135,7 +138,9 @@ try:
         event_record["reason"] = payload.get("stopReason") or payload.get("stop_reason")
 
     trace["events"].append(event_record)
-    trace_path.write_text(json.dumps(trace, indent=2) + "\n", encoding="utf-8")
+    temp_path = trace_path.with_name(f"session.{os.getpid()}.{int(datetime.datetime.now(datetime.timezone.utc).timestamp() * 1000)}.tmp")
+    temp_path.write_text(json.dumps(trace, indent=2) + "\n", encoding="utf-8")
+    os.replace(temp_path, trace_path)
 except Exception as exc:
     print(f"Mission Control session trace hook skipped: {exc}", file=sys.stderr)
 

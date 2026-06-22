@@ -16,23 +16,34 @@ import pathlib
 import re
 import sys
 
-AGENTS = {
-    "maestro", "maestro (orchestrator)",
-    "pax", "pax (planner)",
-    "scout", "scout (explorer)",
-    "ava", "ava (architect)",
-    "carl", "carl (coder)",
-    "tess", "tess (tester)",
-    "sera", "sera (security)",
-    "riley", "riley (relay)",
-    "sam", "sam (scribe)",
-    "libby", "libby (librarian)",
-}
+AGENT_PATTERNS = [
+    r"maestro", r"maestro-orchestrator", r"maestro \(orchestrator\)", r"mission-control-agent-team:maestro-orchestrator",
+    r"pax", r"pax-planner", r"pax \(planner\)", r"mission-control-agent-team:pax-planner",
+    r"scout", r"scout-explorer", r"scout \(explorer\)", r"mission-control-agent-team:scout-explorer",
+    r"ava", r"ava-architect", r"ava \(architect\)", r"mission-control-agent-team:ava-architect",
+    r"carl", r"carl-coder", r"carl \(coder\)", r"mission-control-agent-team:carl-coder",
+    r"tess", r"tess-tester", r"tess \(tester\)", r"mission-control-agent-team:tess-tester",
+    r"sera", r"sera-security", r"sera \(security\)", r"mission-control-agent-team:sera-security",
+    r"riley", r"riley-relay", r"riley \(relay\)", r"mission-control-agent-team:riley-relay",
+    r"sam", r"sam-scribe", r"sam \(scribe\)", r"mission-control-agent-team:sam-scribe",
+    r"libby", r"libby-librarian", r"libby \(librarian\)", r"mission-control-agent-team:libby-librarian",
+]
 
 
 def is_mission_text(text):
     lowered = (text or "").lower()
-    return any(agent in lowered for agent in AGENTS)
+    return any(re.search(rf"(?<![a-z0-9_-]){pattern}(?![a-z0-9_-])", lowered) for pattern in AGENT_PATTERNS)
+
+
+def is_mission_request(tool_args, objects, combined):
+    for obj in objects:
+        if is_mission_text(str(obj.get("to") or "")):
+            return True
+    if isinstance(tool_args, dict):
+        for field in ("to", "agent", "agentName", "agent_name", "name", "subagent", "target", "targetAgent", "target_agent"):
+            if is_mission_text(str(tool_args.get(field) or "")):
+                return True
+    return is_mission_text(combined)
 
 
 def strings(value):
@@ -137,11 +148,13 @@ try:
         if tool_name not in {"agent", "task"}:
             print("{}")
             raise SystemExit(0)
-        combined = "\n".join(strings(payload.get("toolArgs") or payload.get("tool_input")))
-        if not is_mission_text(combined) and "handoff_id" not in combined:
+        tool_args = payload.get("toolArgs") or payload.get("tool_input")
+        combined = "\n".join(strings(tool_args))
+        objects = json_objects(combined)
+        if not is_mission_request(tool_args, objects, combined):
             print("{}")
             raise SystemExit(0)
-        request = next((obj for obj in json_objects(combined) if "handoff_id" in obj), None)
+        request = next((obj for obj in objects if "handoff_id" in obj), None)
         if request is None:
             print(json.dumps({
                 "permissionDecision": "deny",
