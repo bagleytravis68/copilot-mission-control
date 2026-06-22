@@ -43,7 +43,7 @@ def is_mission_request(tool_args, objects, combined):
         for field in ("to", "agent", "agentName", "agent_name", "name", "subagent", "target", "targetAgent", "target_agent"):
             if is_mission_text(str(tool_args.get(field) or "")):
                 return True
-    return is_mission_text(combined)
+    return False
 
 
 def strings(value):

@@ -378,6 +378,19 @@
         },
         "errorLength": {
           "type": "number"
+        },
+        "promptLength": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "errorContext": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "recoverable": {
+          "type": "boolean"
         }
       },
       "additionalProperties": false

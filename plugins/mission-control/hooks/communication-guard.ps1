@@ -145,7 +145,7 @@ function Test-MissionControlRequest {
         }
     }
 
-    return Test-MissionAgentText -Text $CombinedText
+    return $false
 }
 
 function Get-JsonObjectsFromText {
