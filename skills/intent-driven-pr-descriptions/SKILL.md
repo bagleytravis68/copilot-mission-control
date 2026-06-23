@@ -166,7 +166,7 @@ Only mention performance, reliability, or security impact when supported by the 
 
 When generating a complete PR description, use exactly this structure:
 
-```markdown
+~~~markdown
 ## 🧭 What & Why
 
 <One concise sentence explaining the intent, problem solved, or value delivered.>
@@ -188,7 +188,8 @@ When generating a complete PR description, use exactly this structure:
 ## ⚠️ Notes for Reviewers
 
 - <Breaking changes, migrations, performance considerations, security implications, assumptions, or warnings.>
-  
+
 If there are no special notes, write exactly:
 
 No special reviewer notes identified from the provided context.
+~~~
