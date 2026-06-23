@@ -55,6 +55,43 @@ APM is already being used as a tested installation path for the generated source
 
 ## Install
 
+### Install methods explained (plain language)
+
+- **APM source install**: Install directly from this repo's generated package source.  
+  **How it works**: run the APM build/sync step, then `apm install --target <harness>`.  
+  **Pros**: most transparent and reproducible; best for development and validation.  
+  **Cons**: requires local source checkout and build step.
+
+- **Existing local plugin package**: Install the prebuilt/copied local Copilot plugin folder from this repo (`plugins/mission-control`).  
+  **How it works**: `install.ps1`/`install.sh` can rebuild then run Copilot plugin install locally.  
+  **Pros**: stable Copilot fallback when APM flow is not what you want.  
+  **Cons**: Copilot-specific, not harness-agnostic.
+
+- **APM packed bundle**: Install from a packaged artifact created by `apm pack` instead of source files.  
+  **How it works**: produce bundle, then `apm install <bundle> --target <harness>`.  
+  **Pros**: shareable artifact, closer to release distribution flow.  
+  **Cons**: currently less validated here than source install.
+
+- **APM marketplace**: Install from a published APM registry/market reference.  
+  **How it works**: `apm install <marketplace-ref> --target <harness>`.  
+  **Pros**: simplest end-user experience at scale.  
+  **Cons**: depends on publication pipeline and marketplace validation.
+
+- **Repo-local project extension**: Use the extension that lives inside this repository at `.github/extensions/mission-control/` (Copilot App path).  
+  **How it works**: Copilot App loads the extension from the repo itself.  
+  **Pros**: fastest way to iterate on app-extension behavior locally.  
+  **Cons**: tied to this repo checkout; not a portable install mechanism by itself.
+
+- **APM Copilot App/canvas extension install**: Use APM to place Copilot App extension assets instead of relying on repo-local files.  
+  **How it works**: APM installs extension files into the expected app extension location for the selected target.  
+  **Pros**: aligns app-extension delivery with the same APM model used elsewhere.  
+  **Cons**: still an emerging/validation path for this project.
+
+- **Marketplace-style app distribution**: Deliver Copilot App extension through a marketplace/distribution channel rather than source checkout.  
+  **How it works**: users install from a published app/extension distribution reference.  
+  **Pros**: easiest non-technical onboarding once mature.  
+  **Cons**: publication and validation workflow is still not finalized here.
+
 ### Preferred direction: APM source package
 
 ```powershell
