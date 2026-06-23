@@ -14,7 +14,7 @@ Use this skill when generating or improving a git commit message.
 
 [optional body]
 
-[required footer(s)]
+[optional footer(s)]
 ```
 
 Supported `type` values:
