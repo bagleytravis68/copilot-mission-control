@@ -30,7 +30,7 @@ Contribution policy:
 - Per-event trace source labels so overlapping Copilot app and Copilot CLI hook telemetry can be attributed
 - GitHub Copilot app session-event telemetry for model, sub-agent, tool, skill, and usage metadata in the shared session trace
 - Local Copilot app SDK documentation and type-reference guidance for future extension development
-- Intent-driven PR description and commit authoring skills in canonical `skills/` source plus synced generated plugin/APM package copies.
+- Intent-driven PR description and commit authoring skills added to canonical `skills/` source with synced generated plugin/APM package copies.
 
 ### Changed
 - Added repo-wide branch naming governance for app-created worktree sessions and PR policy checks, including rejection of `feature/` branch prefixes and a preference for existing issue-backed branch naming when available.
