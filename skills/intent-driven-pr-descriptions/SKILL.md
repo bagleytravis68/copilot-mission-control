@@ -11,7 +11,7 @@ Use this skill whenever generating, improving, or reviewing a pull request title
 
 Pull request titles MUST follow the Conventional Commit format:
 
-<type>[optional scope]: <description>
+`<type>[optional scope]: <description>`
 
 Examples:
 
