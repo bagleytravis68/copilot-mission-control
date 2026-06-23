@@ -78,7 +78,7 @@ When asked to generate a pull request description, inspect all available context
 - configuration or infrastructure changes
 - database, API, contract, schema, or migration changes
 
-**Action Item** - If no linked work or issue context is found prompt the user 1 time to ask if they want to supply a link. 
+**Action Item** - If no linked work or issue context is found, prompt the user once to ask if they want to supply a link.
 
 Then generate a PR description using the required structure below.
 
