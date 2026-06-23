@@ -34,7 +34,7 @@ Analyze the diff to determine:
 
 - **Type (required)**: What kind of change is this? Must be one of the supported Conventional Commit types.
 - **Scope**: What area/module is affected?
-- **Description**: One-line summary of what changed (present tense, imperative mood, <72 chars)
+- **Description**: One-line summary of what changed (present tense, imperative mood, <= 72 chars)
 - **Body (optional, concise)**: 1-3 short lines that explain why this change exists and any important context
 - Explain what and why, not how
 
